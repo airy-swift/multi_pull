@@ -61,7 +61,6 @@ class _MyHomePageState extends State<MyHomePage> {
           return ExBarItem(
             icon: Icon(x),
             label: x.fontFamily,
-            extensionItems: [Icons.arrow_right, Icons.close].map((xx) => ExtensionItem(Icon(xx), () => setState(() => xx.toString()))).toList(),
             onSelectedTap: () => setState(() => _text = x.toString()),
           );
         }).toList(),

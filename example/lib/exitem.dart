@@ -31,7 +31,6 @@ class ExBarItem {
     this.label,
     Widget activeIcon,
     this.onSelectedTap,
-    this.extensionItems,
     this.backgroundColor,
   }) : activeIcon = activeIcon ?? icon,
         assert(icon != null);
@@ -75,7 +74,6 @@ class ExBarItem {
 
   final VoidCallback onSelectedTap;
 
-  final List<ExtensionItem> extensionItems;
 
   /// The color of the background radial animation for material [BottomNavigationBar].
   ///
@@ -91,10 +89,4 @@ class ExBarItem {
   ///  * [Icon.color] and [ImageIcon.color] to control the foreground color of
   ///    the icons themselves.
   final Color backgroundColor;
-}
-
-class ExtensionItem {
-  const ExtensionItem(this.icon, this.onTap);
-  final Widget icon;
-  final VoidCallback onTap;
 }

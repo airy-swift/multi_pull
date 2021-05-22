@@ -322,26 +322,28 @@ class ExBar extends StatefulWidget {
   _ExBarState createState() => _ExBarState();
 }
 
-class _BottomNavigationTile extends StatefulWidget {
+// This represents a single tile in the bottom navigation bar. It is intended
+// to go into a flex container.
+class _BottomNavigationTile extends StatelessWidget {
   const _BottomNavigationTile(
-    this.type,
-    this.item,
-    this.animation,
-    this.iconSize, {
-    this.onTap,
-    this.onLongTap,
-    this.colorTween,
-    this.flex,
-    this.selected = false,
-    @required this.selectedLabelStyle,
-    @required this.unselectedLabelStyle,
-    @required this.selectedIconTheme,
-    @required this.unselectedIconTheme,
-    this.showSelectedLabels,
-    this.showUnselectedLabels,
-    this.indexLabel,
-    @required this.mouseCursor,
-  })  : assert(type != null),
+      this.type,
+      this.item,
+      this.animation,
+      this.iconSize, {
+        this.onTap,
+        this.onLongTap,
+        this.colorTween,
+        this.flex,
+        this.selected = false,
+        @required this.selectedLabelStyle,
+        @required this.unselectedLabelStyle,
+        @required this.selectedIconTheme,
+        @required this.unselectedIconTheme,
+        this.showSelectedLabels,
+        this.showUnselectedLabels,
+        this.indexLabel,
+        @required this.mouseCursor,
+      })  : assert(type != null),
         assert(item != null),
         assert(animation != null),
         assert(selected != null),
@@ -368,16 +370,6 @@ class _BottomNavigationTile extends StatefulWidget {
   final MouseCursor mouseCursor;
 
   @override
-  _BottomNavigationTileState createState() => _BottomNavigationTileState();
-}
-
-// This represents a single tile in the bottom navigation bar. It is intended
-// to go into a flex container.
-class _BottomNavigationTileState extends State<_BottomNavigationTile>
-    with SingleTickerProviderStateMixin {
-
-
-  @override
   Widget build(BuildContext context) {
     // In order to use the flex container to grow the tile during animation, we
     // need to divide the changes in flex allotment into smaller pieces to
@@ -388,14 +380,14 @@ class _BottomNavigationTileState extends State<_BottomNavigationTile>
     final BottomNavigationBarThemeData bottomTheme =
         BottomNavigationBarTheme.of(context);
 
-    final double selectedFontSize = widget.selectedLabelStyle.fontSize;
+    final double selectedFontSize = selectedLabelStyle.fontSize;
 
-    final double selectedIconSize = widget.selectedIconTheme?.size ??
+    final double selectedIconSize = selectedIconTheme?.size ??
         bottomTheme?.selectedIconTheme?.size ??
-        widget.iconSize;
-    final double unselectedIconSize = widget.unselectedIconTheme?.size ??
+        iconSize;
+    final double unselectedIconSize = unselectedIconTheme?.size ??
         bottomTheme?.unselectedIconTheme?.size ??
-        widget.iconSize;
+        iconSize;
 
     // The amount that the selected icon is bigger than the unselected icons,
     // (or zero if the selected icon is not bigger than the unselected icons).
@@ -425,52 +417,47 @@ class _BottomNavigationTileState extends State<_BottomNavigationTile>
     // =======
     double bottomPadding;
     double topPadding;
-    if (widget.showSelectedLabels && !widget.showUnselectedLabels) {
+    if (showSelectedLabels && !showUnselectedLabels) {
       bottomPadding = Tween<double>(
         begin: selectedIconDiff / 2.0,
         end: selectedFontSize / 2.0 - unselectedIconDiff / 2.0,
-      ).evaluate(widget.animation);
+      ).evaluate(animation);
       topPadding = Tween<double>(
         begin: selectedFontSize + selectedIconDiff / 2.0,
         end: selectedFontSize / 2.0 - unselectedIconDiff / 2.0,
-      ).evaluate(widget.animation);
-    } else if (!widget.showSelectedLabels && !widget.showUnselectedLabels) {
+      ).evaluate(animation);
+    } else if (!showSelectedLabels && !showUnselectedLabels) {
       bottomPadding = Tween<double>(
         begin: selectedIconDiff / 2.0,
         end: unselectedIconDiff / 2.0,
-      ).evaluate(widget.animation);
+      ).evaluate(animation);
       topPadding = Tween<double>(
         begin: selectedFontSize + selectedIconDiff / 2.0,
         end: selectedFontSize + unselectedIconDiff / 2.0,
-      ).evaluate(widget.animation);
+      ).evaluate(animation);
     } else {
       bottomPadding = Tween<double>(
         begin: selectedFontSize / 2.0 + selectedIconDiff / 2.0,
         end: selectedFontSize / 2.0 + unselectedIconDiff / 2.0,
-      ).evaluate(widget.animation);
+      ).evaluate(animation);
       topPadding = Tween<double>(
         begin: selectedFontSize / 2.0 + selectedIconDiff / 2.0,
         end: selectedFontSize / 2.0 + unselectedIconDiff / 2.0,
-      ).evaluate(widget.animation);
+      ).evaluate(animation);
     }
 
-    switch (widget.type) {
+    switch (type) {
       case ExBarType.fixed:
         size = 1;
         break;
       case ExBarType.shifting:
-        size = (widget.flex * 1000.0).round();
+        size = (flex * 1000.0).round();
         break;
     }
 
-    Widget result = GestureDetector(
-      onTap: widget.onTap,
-      onLongPress: () {
-        _animationController.status == AnimationStatus.dismissed
-            ? (_animationController).forward()
-            : (_animationController).reverse();
-      },
-      // mouseCursor: widget.mouseCursor,
+    Widget result = InkResponse(
+      onTap: onTap,
+      mouseCursor: mouseCursor,
       child: Padding(
         padding: EdgeInsets.only(top: topPadding, bottom: bottomPadding),
         child: Column(
@@ -478,29 +465,28 @@ class _BottomNavigationTileState extends State<_BottomNavigationTile>
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
-            ...menuItems(),
             _TileIcon(
-              colorTween: widget.colorTween,
-              animation: widget.animation,
-              iconSize: widget.iconSize,
-              selected: widget.selected,
-              item: widget.item,
+              colorTween: colorTween,
+              animation: animation,
+              iconSize: iconSize,
+              selected: selected,
+              item: item,
               selectedIconTheme:
-                  widget.selectedIconTheme ?? bottomTheme.selectedIconTheme,
+                  selectedIconTheme ?? bottomTheme.selectedIconTheme,
               unselectedIconTheme:
-                  widget.unselectedIconTheme ?? bottomTheme.unselectedIconTheme,
+                  unselectedIconTheme ?? bottomTheme.unselectedIconTheme,
             ),
             _Label(
-              colorTween: widget.colorTween,
-              animation: widget.animation,
-              item: widget.item,
+              colorTween: colorTween,
+              animation: animation,
+              item: item,
               selectedLabelStyle:
-                  widget.selectedLabelStyle ?? bottomTheme.selectedLabelStyle,
-              unselectedLabelStyle: widget.unselectedLabelStyle ??
+                  selectedLabelStyle ?? bottomTheme.selectedLabelStyle,
+              unselectedLabelStyle: unselectedLabelStyle ??
                   bottomTheme.unselectedLabelStyle,
               showSelectedLabels:
-                  widget.showSelectedLabels ?? bottomTheme.showUnselectedLabels,
-              showUnselectedLabels: widget.showUnselectedLabels ??
+                  showSelectedLabels ?? bottomTheme.showUnselectedLabels,
+              showUnselectedLabels: showUnselectedLabels ??
                   bottomTheme.showUnselectedLabels,
             ),
           ],
@@ -508,9 +494,9 @@ class _BottomNavigationTileState extends State<_BottomNavigationTile>
       ),
     );
 
-    if (widget.item.label != null) {
+    if (item.label != null) {
       result = Tooltip(
-        message: widget.item.label,
+        message: item.label,
         preferBelow: false,
         verticalOffset: selectedIconSize + selectedFontSize,
         child: result,
@@ -518,13 +504,13 @@ class _BottomNavigationTileState extends State<_BottomNavigationTile>
     }
 
     result = Semantics(
-      selected: widget.selected,
+      selected: selected,
       container: true,
       child: Stack(
         children: <Widget>[
           result,
           Semantics(
-            label: widget.indexLabel,
+            label: indexLabel,
           ),
         ],
       ),
@@ -754,25 +740,11 @@ class _ExBarState extends State<ExBar> with TickerProviderStateMixin {
     assert(false);
     return false;
   }
-  AnimationController _exAnimationController;
-  Animation<double> _exAnimation;
 
   @override
   void initState() {
     super.initState();
     _resetState();
-    _exAnimationController = AnimationController(
-      vsync: this,
-      duration: Duration(milliseconds: 500),
-    )..addListener(() {
-      setState(() {});
-    });
-    _exAnimation = Tween(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-          parent: _exAnimationController,
-          curve: Curves.bounceIn,
-          reverseCurve: Curves.bounceOut),
-    );
   }
 
   void _rebuild() {
@@ -935,9 +907,6 @@ class _ExBarState extends State<ExBar> with TickerProviderStateMixin {
             widget.onTap(i);
           }
         },
-        onLongTap: () {
-          if (widget.items[i].extensionItems != null) {}
-        },
         colorTween: colorTween,
         flex: _evaluateFlex(_animations[i]),
         selected: i == widget.currentIndex,
@@ -988,61 +957,30 @@ class _ExBarState extends State<ExBar> with TickerProviderStateMixin {
         break;
     }
 
-    return Stack(
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: List.generate(widget.items.length, (x) => menuItems(x)),
-        ),
-        Semantics(
-          explicitChildNodes: true,
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-                minHeight:
-                    kBottomNavigationBarHeight + additionalBottomPadding),
-            child: CustomPaint(
-              painter: _RadialPainter(
-                circles: _circles.toList(),
-                textDirection: Directionality.of(context),
-              ),
-              child: Material(
-                // Splashes.
-                type: MaterialType.transparency,
-                child: Padding(
-                  padding: EdgeInsets.only(bottom: additionalBottomPadding),
-                  child: MediaQuery.removePadding(
-                    context: context,
-                    removeBottom: true,
-                    child: _createContainer(_createTiles()),
-                  ),
-                ),
+    return Semantics(
+      explicitChildNodes: true,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+            minHeight: kBottomNavigationBarHeight + additionalBottomPadding),
+        child: CustomPaint(
+          painter: _RadialPainter(
+            circles: _circles.toList(),
+            textDirection: Directionality.of(context),
+          ),
+          child: Material(
+            // Splashes.
+            type: MaterialType.transparency,
+            child: Padding(
+              padding: EdgeInsets.only(bottom: additionalBottomPadding),
+              child: MediaQuery.removePadding(
+                context: context,
+                removeBottom: true,
+                child: _createContainer(_createTiles()),
               ),
             ),
           ),
         ),
-      ],
-    );
-  }
-
-  Widget menuItems(int index) {
-    List<Widget> items = [];
-    widget.items[index].extensionItems.asMap().forEach(
-      (i, v) {
-        items.add(
-          Positioned(
-            bottom: (i * 200).toDouble(),
-            child: Transform.scale(
-              scale: _animation.value,
-              child: CircleAvatar(
-                child: v.icon,
-              ),
-            ),
-          ),
-        );
-      },
-    );
-    return Column(
-      children: items,
+      ),
     );
   }
 }
