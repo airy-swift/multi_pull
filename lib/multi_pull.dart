@@ -1,3 +1,3 @@
 library multi_pull;
 
-export 'src/sample.dart';
+export 'src/multi_pull.dart';

@@ -1,5 +1,5 @@
-import 'package:example/multi_pull.dart';
 import 'package:flutter/material.dart';
+import 'package:multi_pull/multi_pull.dart';
 
 void main() {
   runApp(MyApp());
@@ -29,9 +29,6 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _currentIndex = 0;
-  String _text = "";
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -55,6 +52,12 @@ class _MyHomePageState extends State<MyHomePage> {
 }
 
 class NextPage extends StatelessWidget {
+  NextPage();
+
+  final _firstTextController = TextEditingController();
+  final _secondTextController = TextEditingController();
+  final _thirdTextController = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -62,23 +65,44 @@ class NextPage extends StatelessWidget {
         title: Text("Second Page"),
       ),
       body: MultiPull(
-        actionWidget: [
+        actionWidgets: [
           ActionWidget(
-            icon: Icon(Icons.close),
-            label: "戻る",
+            icon: Icon(Icons.arrow_back_ios_outlined),
+            label: "back",
             action: () => Navigator.pop(context),
           ),
           ActionWidget(
-            icon: Icon(Icons.close),
-            label: "進む",
-            onRefresh: () async {
-              await Future.delayed(Duration(seconds: 3));
-              print("進んだ");
+            icon: Icon(Icons.refresh_rounded),
+            label: "reload",
+            onRefresh: () async => await Future.delayed(Duration(seconds: 2)),
+          ),
+          ActionWidget(
+            icon: Icon(Icons.backspace_outlined),
+            label: "clear",
+            action: () {
+              _firstTextController.clear();
+              _secondTextController.clear();
+              _thirdTextController.clear();
             },
           ),
         ],
-        child: ListView(
-          children: List.generate(100, (index) => Text(index.toString())),
+        child: Center(
+          child: FractionallySizedBox(
+            widthFactor: 0.8,
+            child: ListView(
+              children: [
+                TextField(
+                  controller: _firstTextController,
+                ),
+                TextField(
+                  controller: _secondTextController,
+                ),
+                TextField(
+                  controller: _thirdTextController,
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );

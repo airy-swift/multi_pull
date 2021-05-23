@@ -1,9 +1,7 @@
-import 'package:flutter/material.dart';
-
 import 'dart:async';
 import 'dart:math' as math;
 
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 
 // The over-scroll distance that moves the indicator to its maximum
 // displacement, as a percentage of the scrollable's container extent.
@@ -13,9 +11,12 @@ const double _kDragContainerExtentPercentage = 0.25;
 // displacement; max displacement = _kDragSizeFactorLimit * displacement.
 const double _kDragSizeFactorLimit = 1.5;
 
+const double _widgetScale = 0.8;
+
+const double _actionSize = 70;
+
 // When the scroll ends, the duration of the refresh indicator's animation
 // to the RefreshIndicator's displacement.
-const Duration _kIndicatorSnapDuration = Duration(milliseconds: 150);
 
 // The duration of the ScaleTransition that starts when the refresh action
 // has completed.
@@ -93,8 +94,7 @@ class MultiPull extends StatefulWidget {
       {Key key,
       @required this.child,
       this.displacement = 40.0,
-      @required this.onRefresh,
-      @required this.actionWidget,
+      @required this.actionWidgets,
       this.color,
       this.backgroundColor,
       this.notificationPredicate = defaultScrollNotificationPredicate,
@@ -102,7 +102,7 @@ class MultiPull extends StatefulWidget {
       this.semanticsValue,
       this.strokeWidth = 2.0})
       : assert(child != null),
-        assert(onRefresh != null),
+        assert(actionWidgets != null),
         assert(notificationPredicate != null),
         assert(strokeWidth != null),
         super(key: key);
@@ -120,12 +120,7 @@ class MultiPull extends StatefulWidget {
   /// its actual displacement may significantly exceed this value.
   final double displacement;
 
-  /// A function that's called when the user has dragged the refresh indicator
-  /// far enough to demonstrate that they want the app to refresh. The returned
-  /// [Future] must complete when the refresh operation is finished.
-  final RefreshCallback onRefresh;
-
-  final List<Widget> actionWidget;
+  final List<ActionWidget> actionWidgets;
 
   /// The progress indicator's foreground color. The current theme's
   /// [ThemeData.accentColor] by default.
@@ -168,10 +163,8 @@ class MultiPullState extends State<MultiPull>
   AnimationController _horizonPositionController;
   AnimationController _scaleController;
   Animation<double> _positionFactor;
-  Animation<double> _horizonPositionFactor;
   Animation<double> _scaleFactor;
   Animation<double> _value;
-  Animation<double> _horizonValue;
   Animation<Color> _valueColor;
 
   _RefreshIndicatorMode _mode;
@@ -179,29 +172,31 @@ class MultiPullState extends State<MultiPull>
   bool _isIndicatorAtTop;
   double _dragOffset;
 
+  GlobalKey _key = GlobalKey();
+
+  double indicatorWidth;
+  List<double> clampList;
+
+  Widget _indicator;
+
   static final Animatable<double> _threeQuarterTween =
       Tween<double>(begin: 0.0, end: 0.75);
-  static final Animatable<double> _horizonTween =
-  Tween<double>(begin: -1.0, end: 1.0);
   static final Animatable<double> _kDragSizeFactorLimitTween =
       Tween<double>(begin: 0.0, end: _kDragSizeFactorLimit);
-  static final Animatable<double> _kDragHorizonSizeFactorLimitTween =
-  Tween<double>(begin: 0, end: _kDragSizeFactorLimit);
   static final Animatable<double> _oneToZeroTween =
       Tween<double>(begin: 1.0, end: 0.0);
 
   @override
   void initState() {
     super.initState();
+
     _positionController = AnimationController(vsync: this);
     _positionFactor = _positionController.drive(_kDragSizeFactorLimitTween);
     _value = _positionController.drive(
         _threeQuarterTween); // The "value" of the circular progress indicator during a drag.
 
-    _horizonPositionController = AnimationController(vsync: this);
-    _horizonPositionFactor = _horizonPositionController.drive(_kDragHorizonSizeFactorLimitTween);
-    // _horizonValue = _horizonPositionController.drive(
-    //     _horizonTween);
+    /// TODO iwahashi:
+    _horizonPositionController = AnimationController(vsync: this, value: 0.5);
 
     _scaleController = AnimationController(vsync: this);
     _scaleFactor = _scaleController.drive(_oneToZeroTween);
@@ -236,6 +231,15 @@ class MultiPullState extends State<MultiPull>
         _start(notification.metrics.axisDirection)) {
       setState(() {
         _mode = _RefreshIndicatorMode.drag;
+
+        /// TODO iwahashi:
+        _indicator = Container(
+          height: _actionSize,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: widget.actionWidgets,
+          ),
+        );
       });
       return false;
     }
@@ -263,7 +267,7 @@ class MultiPullState extends State<MultiPull>
           _dismiss(_RefreshIndicatorMode.canceled);
         } else {
           _dragOffset -= notification.scrollDelta;
-          _checkDragOffset(notification.metrics.viewportDimension);
+          _checkDragOffset(notification.dragDetails);
         }
       }
       if (_mode == _RefreshIndicatorMode.armed &&
@@ -277,7 +281,7 @@ class MultiPullState extends State<MultiPull>
       if (_mode == _RefreshIndicatorMode.drag ||
           _mode == _RefreshIndicatorMode.armed) {
         _dragOffset -= notification.overscroll / 2.0;
-        _checkDragOffset(notification.metrics.viewportDimension);
+        _checkDragOffset(notification.dragDetails);
       }
     } else if (notification is ScrollEndNotification) {
       switch (_mode) {
@@ -324,22 +328,36 @@ class MultiPullState extends State<MultiPull>
     _dragOffset = 0.0;
     _scaleController.value = 0.0;
     _positionController.value = 0.0;
-    _horizonPositionController.value = 0.0;
+
+    /// TODO iwahashi:
+    _horizonPositionController.value = 0.5;
+
+    indicatorWidth = _key.currentContext.size.width - _actionSize / 2;
+    final spaceWidth = 1 / (widget.actionWidgets.length + 1);
+    clampList =
+        List.generate(widget.actionWidgets.length, (i) => (i + 1) * spaceWidth);
     return true;
   }
 
-  void _checkDragOffset(double containerExtent) {
+  void _checkDragOffset(DragUpdateDetails details) {
     assert(_mode == _RefreshIndicatorMode.drag ||
         _mode == _RefreshIndicatorMode.armed);
-    double newValue =
-        _dragOffset / (containerExtent * _kDragContainerExtentPercentage);
+    if (details?.globalPosition == null) return;
+    double newValue = _dragOffset /
+        (details.globalPosition.dy * _kDragContainerExtentPercentage);
     if (_mode == _RefreshIndicatorMode.armed)
       newValue = math.max(newValue, 1.0 / _kDragSizeFactorLimit);
     _positionController.value =
         newValue.clamp(0.0, 1.0) as double; // this triggers various rebuilds
 
-    _horizonPositionController.value =
-    newValue.clamp(-1.0, 1.0) as double; // this triggers various rebuilds
+    /// TODO iwahashi:
+    if (_mode == _RefreshIndicatorMode.armed) {
+      final dynamicPos =
+          ((details.globalPosition.dx * _widgetScale) / indicatorWidth)
+              .clamp(0.0, 1.0);
+      _horizonPositionController.value = clampList[_clampIndex(dynamicPos)];
+    }
+
     if (_mode == _RefreshIndicatorMode.drag && _valueColor.value.alpha == 0xFF)
       _mode = _RefreshIndicatorMode.armed;
   }
@@ -363,7 +381,6 @@ class MultiPullState extends State<MultiPull>
       case _RefreshIndicatorMode.canceled:
         await _positionController.animateTo(0.0,
             duration: _kIndicatorScaleDuration);
-
         await _horizonPositionController.animateTo(0.0,
             duration: _kIndicatorScaleDuration);
         break;
@@ -379,6 +396,18 @@ class MultiPullState extends State<MultiPull>
     }
   }
 
+  /// TODO iwahashi:
+  double _clampDouble(double value) {
+    return;
+  }
+
+  /// TODO iwahashi:
+  int _clampIndex(double value) {
+    final _clampList = clampList.map((x) => (x - value).abs()).toList();
+    final _min = _clampList.reduce(math.min);
+    return _clampList.indexOf(_min);
+  }
+
   void _show() {
     assert(_mode != _RefreshIndicatorMode.refresh);
     assert(_mode != _RefreshIndicatorMode.snap);
@@ -386,40 +415,56 @@ class MultiPullState extends State<MultiPull>
     _pendingRefreshFuture = completer.future;
     _mode = _RefreshIndicatorMode.snap;
 
-    _horizonPositionController
-        .animateTo(1.0 / _kDragSizeFactorLimit,
-        duration: _kIndicatorSnapDuration);
-    _positionController
-        .animateTo(1.0 / _kDragSizeFactorLimit,
-            duration: _kIndicatorSnapDuration)
-        .then<void>((void value) {
+    /// TODO iwahashi:
+    final selectedIndex = _clampIndex(_horizonPositionController.value);
+
+    if (widget.actionWidgets[selectedIndex].action != null) {
+      widget.actionWidgets[selectedIndex].action();
+
+      completer.complete();
+      _dismiss(_RefreshIndicatorMode.done);
+    } else if (widget.actionWidgets[selectedIndex].onRefresh != null) {
       if (mounted && _mode == _RefreshIndicatorMode.snap) {
-        assert(widget.onRefresh != null);
         setState(() {
-          // Show the indeterminate progress indicator.
           _mode = _RefreshIndicatorMode.refresh;
         });
-
-        final Future<void> refreshResult = widget.onRefresh();
-        assert(() {
-          if (refreshResult == null)
-            FlutterError.reportError(FlutterErrorDetails(
-              exception: FlutterError('The onRefresh callback returned null.\n'
-                  'The RefreshIndicator onRefresh callback must return a Future.'),
-              context: ErrorDescription('when calling onRefresh'),
-              library: 'material library',
-            ));
-          return true;
-        }());
-        if (refreshResult == null) return;
-        refreshResult.whenComplete(() {
-          if (mounted && _mode == _RefreshIndicatorMode.refresh) {
-            completer.complete();
-            _dismiss(_RefreshIndicatorMode.done);
-          }
-        });
       }
-    });
+      final bool showIndeterminateIndicator =
+          _mode == _RefreshIndicatorMode.refresh ||
+              _mode == _RefreshIndicatorMode.done;
+      setState(() {
+        _indicator = RefreshProgressIndicator(
+          semanticsLabel: widget.semanticsLabel ??
+              MaterialLocalizations.of(context).refreshIndicatorSemanticLabel,
+          semanticsValue: widget.semanticsValue,
+          value: showIndeterminateIndicator ? null : _value.value,
+          valueColor: _valueColor,
+          backgroundColor: widget.backgroundColor,
+          strokeWidth: widget.strokeWidth,
+        );
+      });
+      final Future<void> refreshResult =
+          widget.actionWidgets[selectedIndex].onRefresh();
+      assert(() {
+        if (refreshResult == null)
+          FlutterError.reportError(FlutterErrorDetails(
+            exception: FlutterError('The onRefresh callback returned null.\n'
+                'The RefreshIndicator onRefresh callback must return a Future.'),
+            context: ErrorDescription('when calling onRefresh'),
+            library: 'material library',
+          ));
+        return true;
+      }());
+      if (refreshResult == null) return;
+      refreshResult.whenComplete(() {
+        if (mounted && _mode == _RefreshIndicatorMode.refresh) {
+          completer.complete();
+          _dismiss(_RefreshIndicatorMode.done);
+        }
+      });
+    } else {
+      assert(false);
+    }
   }
 
   /// Show the refresh indicator and run the refresh callback as if it had
@@ -468,11 +513,8 @@ class MultiPullState extends State<MultiPull>
       return true;
     }());
 
-    final bool showIndeterminateIndicator =
-        _mode == _RefreshIndicatorMode.refresh ||
-            _mode == _RefreshIndicatorMode.done;
-
     return Stack(
+      key: _key,
       children: <Widget>[
         child,
 
@@ -498,28 +540,14 @@ class MultiPullState extends State<MultiPull>
                   child: AnimatedBuilder(
                     animation: _positionController,
                     builder: (BuildContext context, Widget child) {
+                      /// TODO iwahashi:
                       return FractionallySizedBox(
-                        widthFactor: 0.8,
-                        child: Container(
-                          height: 70,
-                          child: Row(
-                            children: widget.actionWidget
-                                .map((e) => Expanded(child: e))
-                                .toList(),
-                          ),
+                        widthFactor: _widgetScale,
+                        child: AnimatedSwitcher(
+                          duration: Duration(milliseconds: 500),
+                          child: _indicator,
                         ),
                       );
-                      /*
-                      RefreshProgressIndicator(
-                      semanticsLabel: widget.semanticsLabel ?? MaterialLocalizations.of(context).refreshIndicatorSemanticLabel,
-                      semanticsValue: widget.semanticsValue,
-                      value: showIndeterminateIndicator ? null : _value.value,
-                      valueColor: _valueColor,
-                      backgroundColor: widget.backgroundColor,
-                      strokeWidth: widget.strokeWidth,
-                    );
-
-                       */
                     },
                   ),
                 ),
@@ -527,6 +555,7 @@ class MultiPullState extends State<MultiPull>
             ),
           ),
 
+        /// TODO iwahashi:
         /// pod
         if (_mode != null)
           Positioned(
@@ -536,38 +565,72 @@ class MultiPullState extends State<MultiPull>
             right: 0.0,
             child: SizeTransition(
               axisAlignment: _isIndicatorAtTop ? 1.0 : -1.0,
-              sizeFactor: _positionFactor,
-              child: SizeTransition(
-                axis: Axis.horizontal,
-                axisAlignment: -1.0,
-                sizeFactor: _horizonPositionFactor, // this is what brings it down
-                child: Container(
-                  padding: _isIndicatorAtTop
-                      ? EdgeInsets.only(top: widget.displacement)
-                      : EdgeInsets.only(bottom: widget.displacement),
-                  alignment: _isIndicatorAtTop
-                      ? Alignment.topCenter
-                      : Alignment.bottomCenter,
-                  child: ScaleTransition(
-                    scale: _scaleFactor,
-                    child: AnimatedBuilder(
-                        animation: _positionController,
-                        builder: (BuildContext context, Widget child) {
-                          return AnimatedBuilder(
-                          animation: _horizonPositionController,
-                          builder: (BuildContext context, Widget child) {
-                            return Container(
-                                color: Colors.green,
-                                width: 70,
-                            height: 70,
-                          );
-    });
-                        }),
-                  ),
+              sizeFactor: _positionFactor, // this is what brings it down
+              child: Container(
+                padding: _isIndicatorAtTop
+                    ? EdgeInsets.only(top: widget.displacement)
+                    : EdgeInsets.only(bottom: widget.displacement),
+                alignment: _isIndicatorAtTop
+                    ? Alignment.topCenter
+                    : Alignment.bottomCenter,
+                child: ScaleTransition(
+                  scale: _scaleFactor,
+                  child: AnimatedBuilder(
+                      animation: _horizonPositionController,
+                      builder: (context, child) {
+                        return Transform.translate(
+                          child: Opacity(
+                            opacity: _mode == _RefreshIndicatorMode.refresh ||
+                                    _mode == _RefreshIndicatorMode.done
+                                ? 0.0
+                                : 0.3,
+                            child: CircleAvatar(
+                              radius: _actionSize / 2,
+                              backgroundColor: Colors.grey,
+                            ),
+                          ),
+                          offset: Offset(
+                            (_horizonPositionController.value *
+                                    indicatorWidth) -
+                                (indicatorWidth / 2),
+                            0,
+                          ),
+                        );
+                      }),
                 ),
               ),
             ),
           ),
+      ],
+    );
+  }
+}
+
+/// TODO: write what is this
+class ActionWidget extends StatelessWidget {
+  ActionWidget({
+    @required this.icon,
+    this.label,
+    this.action,
+    this.onRefresh,
+  }) : assert((action != null) != (onRefresh != null));
+
+  final Widget icon;
+  final String label;
+  final Function action;
+  final RefreshCallback onRefresh;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Container(
+          width: _actionSize - 30,
+          height: _actionSize - 30,
+          child: icon,
+        ),
+        if (label != null) //
+          Text(label),
       ],
     );
   }
