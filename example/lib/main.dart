@@ -1,5 +1,5 @@
-import 'package:example/multi_pull.dart';
 import 'package:flutter/material.dart';
+import 'package:multi_pull/multi_pull.dart';
 
 void main() {
   runApp(MyApp());
@@ -29,9 +29,6 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _currentIndex = 0;
-  String _text = "";
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -40,7 +37,7 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       body: Center(
         child: RaisedButton(
-          child: Text('次へ'),
+          child: Text('next page'),
           onPressed: () {
             Navigator.push(
                 context,
@@ -54,7 +51,28 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 }
 
-class NextPage extends StatelessWidget {
+class NextPage extends StatefulWidget {
+  NextPage({Key key}) : super(key: key);
+
+  @override
+  NextPageState createState() => NextPageState();
+}
+
+class NextPageState extends State<NextPage> {
+  NextPageState();
+
+  final _firstTextController = TextEditingController();
+  final _secondTextController = TextEditingController();
+  final _thirdTextController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _firstTextController.text = "Hello";
+    _secondTextController.text = "multi pull actions";
+    _thirdTextController.text = "airy-swift";
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -62,23 +80,41 @@ class NextPage extends StatelessWidget {
         title: Text("Second Page"),
       ),
       body: MultiPull(
-        actionWidget: [
+        actionWidgets: [
           ActionWidget(
-            icon: Icon(Icons.close),
-            label: "戻る",
+            icon: Icon(Icons.arrow_back_ios_outlined),
+            label: "back",
             action: () => Navigator.pop(context),
           ),
           ActionWidget(
-            icon: Icon(Icons.close),
-            label: "進む",
-            onRefresh: () async {
-              await Future.delayed(Duration(seconds: 3));
-              print("進んだ");
+            icon: Icon(Icons.refresh_rounded),
+            label: "reload",
+            onRefresh: () async => await Future.delayed(Duration(seconds: 2)),
+          ),
+          ActionWidget(
+            icon: Icon(Icons.backspace_outlined),
+            label: "clear",
+            action: () {
+              _firstTextController.clear();
+              _secondTextController.clear();
+              _thirdTextController.clear();
             },
           ),
         ],
         child: ListView(
-          children: List.generate(100, (index) => Text(index.toString())),
+          physics: BouncingScrollPhysics(),
+          children: [
+            TextField(
+              controller: _firstTextController,
+            ),
+            TextField(
+              controller: _secondTextController,
+            ),
+            TextField(
+              controller: _thirdTextController,
+            ),
+            ...List.generate(100, (index) => Text(index.toString(), style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold))),
+          ],
         ),
       ),
     );
