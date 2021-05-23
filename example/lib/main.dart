@@ -1,6 +1,5 @@
-import 'package:example/exitem.dart';
+import 'package:example/multi_pull.dart';
 import 'package:flutter/material.dart';
-import 'exbar.dart';
 
 void main() {
   runApp(MyApp());
@@ -40,30 +39,47 @@ class _MyHomePageState extends State<MyHomePage> {
         title: Text(widget.title),
       ),
       body: Center(
-        child: Text(
-          _text,
-          style: TextStyle(
-            fontSize: 30,
-            fontWeight: FontWeight.bold,
-          ),
+        child: RaisedButton(
+          child: Text('次へ'),
+          onPressed: () {
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => NextPage(),
+                ));
+          },
         ),
       ),
-      bottomNavigationBar: ExBar(
-        currentIndex: _currentIndex,
-        onTap: (index) {
-          print(index.toString());
-          setState(() {
-            _currentIndex = index;
-            _text = index.toString();
-          });
-        },
-        items: [Icons.label, Icons.info, Icons.extension].map((x) {
-          return ExBarItem(
-            icon: Icon(x),
-            label: x.fontFamily,
-            onSelectedTap: () => setState(() => _text = x.toString()),
-          );
-        }).toList(),
+    );
+  }
+}
+
+class NextPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Second Page"),
+      ),
+      body: MultiPull(
+        actionWidget: [
+          ActionWidget(
+            icon: Icon(Icons.close),
+            label: "戻る",
+            action: () => Navigator.pop(context),
+          ),
+          ActionWidget(
+            icon: Icon(Icons.close),
+            label: "進む",
+            onRefresh: () async {
+              await Future.delayed(Duration(seconds: 3));
+              print("進んだ");
+            },
+          ),
+        ],
+        child: ListView(
+          children: List.generate(100, (index) => Text(index.toString())),
+        ),
       ),
     );
   }
