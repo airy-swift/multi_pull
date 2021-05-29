@@ -95,6 +95,10 @@ class MultiPull extends StatefulWidget {
       @required this.child,
       this.displacement = 40.0,
       @required this.actionWidgets,
+      this.circleOpacity = 0.3,
+      this.circleColor = Colors.grey,
+      this.circleMoveDuration,
+      this.circleMoveCurve = Curves.easeIn,
       this.color,
       this.backgroundColor,
       this.notificationPredicate = defaultScrollNotificationPredicate,
@@ -121,6 +125,14 @@ class MultiPull extends StatefulWidget {
   final double displacement;
 
   final List<ActionWidget> actionWidgets;
+
+  final double circleOpacity;
+
+  final Color circleColor;
+
+  final Duration circleMoveDuration;
+
+  final Curve circleMoveCurve;
 
   /// The progress indicator's foreground color. The current theme's
   /// [ThemeData.accentColor] by default.
@@ -176,6 +188,8 @@ class MultiPullState extends State<MultiPull>
 
   double indicatorWidth;
   List<double> clampList;
+
+  int _circlePreviousPositionIndex;
 
   Widget _indicator;
 
@@ -270,9 +284,6 @@ class MultiPullState extends State<MultiPull>
       }
       if (_mode == _RefreshIndicatorMode.armed &&
           notification.dragDetails == null) {
-        // On iOS start the refresh when the Scrollable bounces back from the
-        // overscroll (ScrollNotification indicating this don't have dragDetails
-        // because the scroll activity is not directly triggered by a drag).
         _show();
       }
     } else if (notification is OverscrollNotification) {
@@ -351,7 +362,16 @@ class MultiPullState extends State<MultiPull>
       final dynamicPos =
           ((details.globalPosition.dx * _widgetScale) / indicatorWidth)
               .clamp(0.0, 1.0);
-      _horizonPositionController.value = clampList[_clampIndex(dynamicPos)];
+      final nextPositionIndex = _clampIndex(dynamicPos);
+      if (nextPositionIndex != _circlePreviousPositionIndex) {
+        _circlePreviousPositionIndex = nextPositionIndex;
+        _horizonPositionController.animateTo(
+          clampList[nextPositionIndex],
+          duration: widget.circleMoveDuration ?? Duration(milliseconds: 500),
+          curve: widget.circleMoveCurve,
+        );
+        // _horizonPositionController.value
+      }
     }
 
     if (_mode == _RefreshIndicatorMode.drag && _valueColor.value.alpha == 0xFF)
@@ -543,7 +563,7 @@ class MultiPullState extends State<MultiPull>
             ),
           ),
 
-        /// pod
+        /// circle
         if (_mode != null)
           Positioned(
             top: _isIndicatorAtTop ? 0.0 : null,
@@ -570,10 +590,14 @@ class MultiPullState extends State<MultiPull>
                             opacity: _mode == _RefreshIndicatorMode.refresh ||
                                     _mode == _RefreshIndicatorMode.done
                                 ? 0.0
-                                : 0.3,
-                            child: CircleAvatar(
-                              radius: _actionSize / 2,
-                              backgroundColor: Colors.grey,
+                                : widget.circleOpacity,
+                            child: Container(
+                              width: _actionSize,
+                              height: _actionSize,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: widget.circleColor,
+                              ),
                             ),
                           ),
                           offset: Offset(
@@ -595,7 +619,7 @@ class MultiPullState extends State<MultiPull>
 
 /// TODO: write what is this
 class ActionWidget extends StatelessWidget {
-  ActionWidget({
+  const ActionWidget({
     @required this.icon,
     this.label,
     this.action,

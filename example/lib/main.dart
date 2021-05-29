@@ -80,6 +80,8 @@ class NextPageState extends State<NextPage> {
         title: Text("Second Page"),
       ),
       body: MultiPull(
+        circleMoveDuration: Duration(milliseconds: 400),
+        circleMoveCurve: Curves.easeInOut,
         actionWidgets: [
           ActionWidget(
             icon: Icon(Icons.arrow_back_ios_outlined),
