@@ -96,6 +96,7 @@ class MultiPull extends StatefulWidget {
       this.displacement = 40.0,
       @required this.actionWidgets,
       this.circleOpacity = 0.3,
+        this.circleColor = Colors.grey,
       this.color,
       this.backgroundColor,
       this.notificationPredicate = defaultScrollNotificationPredicate,
@@ -124,6 +125,8 @@ class MultiPull extends StatefulWidget {
   final List<ActionWidget> actionWidgets;
 
   final double circleOpacity;
+
+  final Color circleColor;
 
   /// The progress indicator's foreground color. The current theme's
   /// [ThemeData.accentColor] by default.
@@ -576,7 +579,7 @@ class MultiPullState extends State<MultiPull>
                                 : widget.circleOpacity,
                             child: CircleAvatar(
                               radius: _actionSize / 2,
-                              backgroundColor: Colors.grey,
+                              backgroundColor: widget.circleColor,
                             ),
                           ),
                           offset: Offset(
