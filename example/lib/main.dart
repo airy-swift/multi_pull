@@ -100,6 +100,24 @@ class NextPageState extends State<NextPage> {
               _thirdTextController.clear();
             },
           ),
+          ActionWidget(
+            icon: Icon(Icons.backspace_outlined),
+            label: "clear",
+            action: () {
+              _firstTextController.clear();
+              _secondTextController.clear();
+              _thirdTextController.clear();
+            },
+          ),
+          ActionWidget(
+            icon: Icon(Icons.backspace_outlined),
+            label: "clear",
+            action: () {
+              _firstTextController.clear();
+              _secondTextController.clear();
+              _thirdTextController.clear();
+            },
+          ),
         ],
         child: ListView(
           physics: BouncingScrollPhysics(),

@@ -84,9 +84,9 @@ packages:
   multi_pull:
     dependency: "direct dev"
     description:
-      name: multi_pull
-      url: "https://pub.dartlang.org"
-    source: hosted
+      path: ".."
+      relative: true
+    source: path
     version: "0.1.0"
   path:
     dependency: transitive
