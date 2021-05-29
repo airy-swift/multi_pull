@@ -619,7 +619,7 @@ class MultiPullState extends State<MultiPull>
 
 /// TODO: write what is this
 class ActionWidget extends StatelessWidget {
-  ActionWidget({
+  const ActionWidget({
     @required this.icon,
     this.label,
     this.action,
