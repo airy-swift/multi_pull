@@ -80,6 +80,8 @@ class NextPageState extends State<NextPage> {
         title: Text("Second Page"),
       ),
       body: MultiPull(
+        circleMoveDuration: Duration(milliseconds: 400),
+        circleMoveCurve: Curves.easeInOut,
         actionWidgets: [
           ActionWidget(
             icon: Icon(Icons.arrow_back_ios_outlined),
@@ -90,24 +92,6 @@ class NextPageState extends State<NextPage> {
             icon: Icon(Icons.refresh_rounded),
             label: "reload",
             onRefresh: () async => await Future.delayed(Duration(seconds: 2)),
-          ),
-          ActionWidget(
-            icon: Icon(Icons.backspace_outlined),
-            label: "clear",
-            action: () {
-              _firstTextController.clear();
-              _secondTextController.clear();
-              _thirdTextController.clear();
-            },
-          ),
-          ActionWidget(
-            icon: Icon(Icons.backspace_outlined),
-            label: "clear",
-            action: () {
-              _firstTextController.clear();
-              _secondTextController.clear();
-              _thirdTextController.clear();
-            },
           ),
           ActionWidget(
             icon: Icon(Icons.backspace_outlined),
