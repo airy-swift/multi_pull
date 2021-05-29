@@ -96,7 +96,7 @@ class MultiPull extends StatefulWidget {
       this.displacement = 40.0,
       @required this.actionWidgets,
       this.circleOpacity = 0.3,
-        this.circleColor = Colors.grey,
+      this.circleColor = Colors.grey,
       this.color,
       this.backgroundColor,
       this.notificationPredicate = defaultScrollNotificationPredicate,
@@ -549,7 +549,7 @@ class MultiPullState extends State<MultiPull>
             ),
           ),
 
-        /// pod
+        /// circle
         if (_mode != null)
           Positioned(
             top: _isIndicatorAtTop ? 0.0 : null,
@@ -577,9 +577,13 @@ class MultiPullState extends State<MultiPull>
                                     _mode == _RefreshIndicatorMode.done
                                 ? 0.0
                                 : widget.circleOpacity,
-                            child: CircleAvatar(
-                              radius: _actionSize / 2,
-                              backgroundColor: widget.circleColor,
+                            child: Container(
+                              width: _actionSize,
+                              height: _actionSize,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: widget.circleColor,
+                              ),
                             ),
                           ),
                           offset: Offset(
