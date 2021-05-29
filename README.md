@@ -20,7 +20,7 @@ So long story short, let's see it in action!
 
 ```pubspec.yml
 dependencies:
-  multi_pull: 0.2.0
+  multi_pull: [latest_version]
 ```
 
 ## Getting Started
@@ -38,6 +38,10 @@ Scaffold(
         title: Text("Second Page"),
       ),
       body: MultiPull(
+        circleOpacity: 0.2,
+        circleColor: Colors.black,
+        circleMoveDuration: Duration(milliseconds: 400),
+        circleMoveCurve: Curves.easeInOut,
         actionWidgets: [
           ActionWidget(
             icon: Icon(Icons.arrow_back_ios_outlined),
