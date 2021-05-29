@@ -20,7 +20,7 @@ So long story short, let's see it in action!
 
 ```pubspec.yml
 dependencies:
-  multi_pull: 0.1
+  multi_pull: 0.2.0
 ```
 
 ## Getting Started
