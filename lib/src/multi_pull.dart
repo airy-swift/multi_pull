@@ -91,10 +91,10 @@ class MultiPull extends StatefulWidget {
   /// An empty string may be passed to avoid having anything read by screen reading software.
   /// The [semanticsValue] may be used to specify progress on the widget.
   const MultiPull(
-      {Key key,
-      @required this.child,
+      {Key? key,
+      required this.child,
       this.displacement = 40.0,
-      @required this.actionWidgets,
+      required this.actionWidgets,
       this.circleOpacity = 0.3,
       this.circleColor = Colors.grey,
       this.circleMoveDuration,
@@ -105,11 +105,7 @@ class MultiPull extends StatefulWidget {
       this.semanticsLabel,
       this.semanticsValue,
       this.strokeWidth = 2.0})
-      : assert(child != null),
-        assert(actionWidgets != null),
-        assert(notificationPredicate != null),
-        assert(strokeWidth != null),
-        super(key: key);
+      : super(key: key);
 
   /// The widget below this widget in the tree.
   ///
@@ -130,17 +126,17 @@ class MultiPull extends StatefulWidget {
 
   final Color circleColor;
 
-  final Duration circleMoveDuration;
+  final Duration? circleMoveDuration;
 
   final Curve circleMoveCurve;
 
   /// The progress indicator's foreground color. The current theme's
   /// [ThemeData.accentColor] by default.
-  final Color color;
+  final Color? color;
 
   /// The progress indicator's background color. The current theme's
   /// [ThemeData.canvasColor] by default.
-  final Color backgroundColor;
+  final Color? backgroundColor;
 
   /// A check that specifies whether a [ScrollNotification] should be
   /// handled by this widget.
@@ -153,10 +149,10 @@ class MultiPull extends StatefulWidget {
   ///
   /// This will be defaulted to [MaterialLocalizations.refreshIndicatorSemanticLabel]
   /// if it is null.
-  final String semanticsLabel;
+  final String? semanticsLabel;
 
   /// {@macro flutter.material.progressIndicator.semanticsValue}
-  final String semanticsValue;
+  final String? semanticsValue;
 
   /// Defines `strokeWidth` for `RefreshIndicator`.
   ///
@@ -171,27 +167,27 @@ class MultiPull extends StatefulWidget {
 /// programmatically show the refresh indicator, see the [show] method.
 class MultiPullState extends State<MultiPull>
     with TickerProviderStateMixin<MultiPull> {
-  AnimationController _positionController;
-  AnimationController _horizonPositionController;
-  AnimationController _scaleController;
-  Animation<double> _positionFactor;
-  Animation<double> _scaleFactor;
-  Animation<double> _value;
-  Animation<Color> _valueColor;
+  late AnimationController _positionController;
+  late AnimationController _horizonPositionController;
+  late AnimationController _scaleController;
+  late Animation<double> _positionFactor;
+  late Animation<double> _scaleFactor;
+  late Animation<double> _value;
+  late Animation<Color> _valueColor;
 
-  _RefreshIndicatorMode _mode;
-  Future<void> _pendingRefreshFuture;
-  bool _isIndicatorAtTop;
-  double _dragOffset;
+  _RefreshIndicatorMode? _mode;
+  late Future<void> _pendingRefreshFuture;
+  bool? _isIndicatorAtTop;
+  double? _dragOffset;
 
   GlobalKey _key = GlobalKey();
 
-  double indicatorWidth;
-  List<double> clampList;
+  late double indicatorWidth;
+  late List<double> clampList;
 
-  int _circlePreviousPositionIndex;
+  int? _circlePreviousPositionIndex;
 
-  Widget _indicator;
+  late Widget _indicator;
 
   static final Animatable<double> _threeQuarterTween =
       Tween<double>(begin: 0.0, end: 0.75);
@@ -218,12 +214,12 @@ class MultiPullState extends State<MultiPull>
   @override
   void didChangeDependencies() {
     final ThemeData theme = Theme.of(context);
+    final color = widget.color ?? theme.accentColor;
     _valueColor = _positionController.drive(
-      ColorTween(
-        begin: (widget.color ?? theme.accentColor).withOpacity(0.0),
-        end: (widget.color ?? theme.accentColor).withOpacity(1.0),
-      ).chain(
-          CurveTween(curve: const Interval(0.0, 1.0 / _kDragSizeFactorLimit))),
+      (ColorTween(
+          begin: color.withOpacity(0.0),
+          end: color.withOpacity(1.0),
+      ) as Animatable<Color>).chain(CurveTween(curve: const Interval(0.0, 1.0 / _kDragSizeFactorLimit))),
     );
     super.didChangeDependencies();
   }
@@ -255,7 +251,7 @@ class MultiPullState extends State<MultiPull>
       });
       return false;
     }
-    bool indicatorAtTopNow;
+    bool? indicatorAtTopNow;
     switch (notification.metrics.axisDirection) {
       case AxisDirection.down:
         indicatorAtTopNow = true;
@@ -278,7 +274,12 @@ class MultiPullState extends State<MultiPull>
         if (notification.metrics.extentBefore > 0.0) {
           _dismiss(_RefreshIndicatorMode.canceled);
         } else {
-          _dragOffset -= notification.scrollDelta;
+          /// confirm
+          if (_dragOffset != null && notification.scrollDelta != null) {
+            _dragOffset = _dragOffset! - notification.scrollDelta!;
+          }
+
+          /// confirm
           _checkDragOffset(notification.dragDetails);
         }
       }
@@ -289,7 +290,11 @@ class MultiPullState extends State<MultiPull>
     } else if (notification is OverscrollNotification) {
       if (_mode == _RefreshIndicatorMode.drag ||
           _mode == _RefreshIndicatorMode.armed) {
-        _dragOffset -= notification.overscroll / 2.0;
+        if (_dragOffset != null) {
+          _dragOffset = _dragOffset! - notification.overscroll / 2.0;
+        }
+
+        /// confirm
         _checkDragOffset(notification.dragDetails);
       }
     } else if (notification is ScrollEndNotification) {
@@ -319,8 +324,6 @@ class MultiPullState extends State<MultiPull>
 
   bool _start(AxisDirection direction) {
     assert(_mode == null);
-    assert(_isIndicatorAtTop == null);
-    assert(_dragOffset == null);
     switch (direction) {
       case AxisDirection.down:
         _isIndicatorAtTop = true;
@@ -340,23 +343,22 @@ class MultiPullState extends State<MultiPull>
 
     _horizonPositionController.value = 0.5;
 
-    indicatorWidth = _key.currentContext.size.width - _actionSize / 2;
+    indicatorWidth = _key.currentContext!.size!.width - _actionSize / 2;
     final spaceWidth = 1 / (widget.actionWidgets.length + 1);
     clampList =
         List.generate(widget.actionWidgets.length, (i) => (i + 1) * spaceWidth);
     return true;
   }
 
-  void _checkDragOffset(DragUpdateDetails details) {
+  void _checkDragOffset(DragUpdateDetails? details) {
     assert(_mode == _RefreshIndicatorMode.drag ||
         _mode == _RefreshIndicatorMode.armed);
-    if (details?.globalPosition == null) return;
-    double newValue = _dragOffset /
+    if (details == null) return;
+    double newValue = _dragOffset! /
         (details.globalPosition.dy * _kDragContainerExtentPercentage);
     if (_mode == _RefreshIndicatorMode.armed)
       newValue = math.max(newValue, 1.0 / _kDragSizeFactorLimit);
-    _positionController.value =
-        newValue.clamp(0.0, 1.0) as double; // this triggers various rebuilds
+    _positionController.value = newValue.clamp(0.0, 1.0);
 
     if (_mode == _RefreshIndicatorMode.armed) {
       final dynamicPos =
@@ -381,9 +383,6 @@ class MultiPullState extends State<MultiPull>
   // Stop showing the refresh indicator.
   Future<void> _dismiss(_RefreshIndicatorMode newMode) async {
     await Future<void>.value();
-    // This can only be called from _show() when refreshing and
-    // _handleScrollNotification in response to a ScrollEndNotification or
-    // direction change.
     assert(newMode == _RefreshIndicatorMode.canceled ||
         newMode == _RefreshIndicatorMode.done);
     setState(() {
@@ -428,7 +427,7 @@ class MultiPullState extends State<MultiPull>
     final selectedIndex = _clampIndex(_horizonPositionController.value);
 
     if (widget.actionWidgets[selectedIndex].action != null) {
-      widget.actionWidgets[selectedIndex].action();
+      widget.actionWidgets[selectedIndex].action!();
 
       completer.complete();
       _dismiss(_RefreshIndicatorMode.done);
@@ -453,18 +452,8 @@ class MultiPullState extends State<MultiPull>
         );
       });
       final Future<void> refreshResult =
-          widget.actionWidgets[selectedIndex].onRefresh();
-      assert(() {
-        if (refreshResult == null)
-          FlutterError.reportError(FlutterErrorDetails(
-            exception: FlutterError('The onRefresh callback returned null.\n'
-                'The RefreshIndicator onRefresh callback must return a Future.'),
-            context: ErrorDescription('when calling onRefresh'),
-            library: 'material library',
-          ));
-        return true;
-      }());
-      if (refreshResult == null) return;
+          widget.actionWidgets[selectedIndex].onRefresh!();
+
       refreshResult.whenComplete(() {
         if (mounted && _mode == _RefreshIndicatorMode.refresh) {
           completer.complete();
@@ -530,25 +519,25 @@ class MultiPullState extends State<MultiPull>
         /// action
         if (_mode != null)
           Positioned(
-            top: _isIndicatorAtTop ? 0.0 : null,
-            bottom: !_isIndicatorAtTop ? 0.0 : null,
+            top: _isIndicatorAtTop! ? 0.0 : null,
+            bottom: !_isIndicatorAtTop! ? 0.0 : null,
             left: 0.0,
             right: 0.0,
             child: SizeTransition(
-              axisAlignment: _isIndicatorAtTop ? 1.0 : -1.0,
+              axisAlignment: _isIndicatorAtTop! ? 1.0 : -1.0,
               sizeFactor: _positionFactor, // this is what brings it down
               child: Container(
-                padding: _isIndicatorAtTop
+                padding: _isIndicatorAtTop!
                     ? EdgeInsets.only(top: widget.displacement)
                     : EdgeInsets.only(bottom: widget.displacement),
-                alignment: _isIndicatorAtTop
+                alignment: _isIndicatorAtTop!
                     ? Alignment.topCenter
                     : Alignment.bottomCenter,
                 child: ScaleTransition(
                   scale: _scaleFactor,
                   child: AnimatedBuilder(
                     animation: _positionController,
-                    builder: (BuildContext context, Widget child) {
+                    builder: (BuildContext context, Widget? child) {
                       return FractionallySizedBox(
                         widthFactor: _widgetScale,
                         child: AnimatedSwitcher(
@@ -566,18 +555,18 @@ class MultiPullState extends State<MultiPull>
         /// circle
         if (_mode != null)
           Positioned(
-            top: _isIndicatorAtTop ? 0.0 : null,
-            bottom: !_isIndicatorAtTop ? 0.0 : null,
+            top: _isIndicatorAtTop! ? 0.0 : null,
+            bottom: !_isIndicatorAtTop! ? 0.0 : null,
             left: 0.0,
             right: 0.0,
             child: SizeTransition(
-              axisAlignment: _isIndicatorAtTop ? 1.0 : -1.0,
+              axisAlignment: _isIndicatorAtTop! ? 1.0 : -1.0,
               sizeFactor: _positionFactor, // this is what brings it down
               child: Container(
-                padding: _isIndicatorAtTop
+                padding: _isIndicatorAtTop!
                     ? EdgeInsets.only(top: widget.displacement)
                     : EdgeInsets.only(bottom: widget.displacement),
-                alignment: _isIndicatorAtTop
+                alignment: _isIndicatorAtTop!
                     ? Alignment.topCenter
                     : Alignment.bottomCenter,
                 child: ScaleTransition(
@@ -620,16 +609,16 @@ class MultiPullState extends State<MultiPull>
 /// TODO: write what is this
 class ActionWidget extends StatelessWidget {
   const ActionWidget({
-    @required this.icon,
+    required this.icon,
     this.label,
     this.action,
     this.onRefresh,
   }) : assert((action != null) != (onRefresh != null));
 
   final Widget icon;
-  final String label;
-  final Function action;
-  final RefreshCallback onRefresh;
+  final String? label;
+  final Function? action;
+  final RefreshCallback? onRefresh;
 
   @override
   Widget build(BuildContext context) {
@@ -641,7 +630,7 @@ class ActionWidget extends StatelessWidget {
           child: icon,
         ),
         if (label != null) //
-          Text(label),
+          Text(label!),
       ],
     );
   }
