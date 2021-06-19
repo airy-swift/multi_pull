@@ -165,15 +165,14 @@ class MultiPull extends StatefulWidget {
 
 /// Contains the state for a [RefreshIndicator]. This class can be used to
 /// programmatically show the refresh indicator, see the [show] method.
-class MultiPullState extends State<MultiPull>
-    with TickerProviderStateMixin<MultiPull> {
+class MultiPullState extends State<MultiPull> with TickerProviderStateMixin<MultiPull> {
   late AnimationController _positionController;
   late AnimationController _horizonPositionController;
   late AnimationController _scaleController;
   late Animation<double> _positionFactor;
   late Animation<double> _scaleFactor;
   late Animation<double> _value;
-  late Animation<Color> _valueColor;
+  late Animation<Color?> _valueColor;
 
   _RefreshIndicatorMode? _mode;
   late Future<void> _pendingRefreshFuture;
@@ -189,12 +188,9 @@ class MultiPullState extends State<MultiPull>
 
   late Widget _indicator;
 
-  static final Animatable<double> _threeQuarterTween =
-      Tween<double>(begin: 0.0, end: 0.75);
-  static final Animatable<double> _kDragSizeFactorLimitTween =
-      Tween<double>(begin: 0.0, end: _kDragSizeFactorLimit);
-  static final Animatable<double> _oneToZeroTween =
-      Tween<double>(begin: 1.0, end: 0.0);
+  static final Animatable<double> _threeQuarterTween = Tween<double>(begin: 0.0, end: 0.75);
+  static final Animatable<double> _kDragSizeFactorLimitTween = Tween<double>(begin: 0.0, end: _kDragSizeFactorLimit);
+  static final Animatable<double> _oneToZeroTween = Tween<double>(begin: 1.0, end: 0.0);
 
   @override
   void initState() {
@@ -202,8 +198,7 @@ class MultiPullState extends State<MultiPull>
 
     _positionController = AnimationController(vsync: this);
     _positionFactor = _positionController.drive(_kDragSizeFactorLimitTween);
-    _value = _positionController.drive(
-        _threeQuarterTween); // The "value" of the circular progress indicator during a drag.
+    _value = _positionController.drive(_threeQuarterTween);
 
     _horizonPositionController = AnimationController(vsync: this, value: 0.5);
 
@@ -216,10 +211,12 @@ class MultiPullState extends State<MultiPull>
     final ThemeData theme = Theme.of(context);
     final color = widget.color ?? theme.accentColor;
     _valueColor = _positionController.drive(
-      (ColorTween(
-          begin: color.withOpacity(0.0),
-          end: color.withOpacity(1.0),
-      ) as Animatable<Color>).chain(CurveTween(curve: const Interval(0.0, 1.0 / _kDragSizeFactorLimit))),
+      ColorTween(
+        begin: color.withOpacity(0.0),
+        end: color.withOpacity(1.0),
+      ).chain(CurveTween(
+        curve: const Interval(0.0, 1.0 / _kDragSizeFactorLimit),
+      )),
     );
     super.didChangeDependencies();
   }
@@ -234,10 +231,7 @@ class MultiPullState extends State<MultiPull>
 
   bool _handleScrollNotification(ScrollNotification notification) {
     if (!widget.notificationPredicate(notification)) return false;
-    if (notification is ScrollStartNotification &&
-        notification.metrics.extentBefore == 0.0 &&
-        _mode == null &&
-        _start(notification.metrics.axisDirection)) {
+    if (notification is ScrollStartNotification && notification.metrics.extentBefore == 0.0 && _mode == null && _start(notification.metrics.axisDirection)) {
       setState(() {
         _mode = _RefreshIndicatorMode.drag;
 
@@ -265,12 +259,9 @@ class MultiPullState extends State<MultiPull>
         break;
     }
     if (indicatorAtTopNow != _isIndicatorAtTop) {
-      if (_mode == _RefreshIndicatorMode.drag ||
-          _mode == _RefreshIndicatorMode.armed)
-        _dismiss(_RefreshIndicatorMode.canceled);
+      if (_mode == _RefreshIndicatorMode.drag || _mode == _RefreshIndicatorMode.armed) _dismiss(_RefreshIndicatorMode.canceled);
     } else if (notification is ScrollUpdateNotification) {
-      if (_mode == _RefreshIndicatorMode.drag ||
-          _mode == _RefreshIndicatorMode.armed) {
+      if (_mode == _RefreshIndicatorMode.drag || _mode == _RefreshIndicatorMode.armed) {
         if (notification.metrics.extentBefore > 0.0) {
           _dismiss(_RefreshIndicatorMode.canceled);
         } else {
@@ -283,13 +274,11 @@ class MultiPullState extends State<MultiPull>
           _checkDragOffset(notification.dragDetails);
         }
       }
-      if (_mode == _RefreshIndicatorMode.armed &&
-          notification.dragDetails == null) {
+      if (_mode == _RefreshIndicatorMode.armed && notification.dragDetails == null) {
         _show();
       }
     } else if (notification is OverscrollNotification) {
-      if (_mode == _RefreshIndicatorMode.drag ||
-          _mode == _RefreshIndicatorMode.armed) {
+      if (_mode == _RefreshIndicatorMode.drag || _mode == _RefreshIndicatorMode.armed) {
         if (_dragOffset != null) {
           _dragOffset = _dragOffset! - notification.overscroll / 2.0;
         }
@@ -345,25 +334,19 @@ class MultiPullState extends State<MultiPull>
 
     indicatorWidth = _key.currentContext!.size!.width - _actionSize / 2;
     final spaceWidth = 1 / (widget.actionWidgets.length + 1);
-    clampList =
-        List.generate(widget.actionWidgets.length, (i) => (i + 1) * spaceWidth);
+    clampList = List.generate(widget.actionWidgets.length, (i) => (i + 1) * spaceWidth);
     return true;
   }
 
   void _checkDragOffset(DragUpdateDetails? details) {
-    assert(_mode == _RefreshIndicatorMode.drag ||
-        _mode == _RefreshIndicatorMode.armed);
+    assert(_mode == _RefreshIndicatorMode.drag || _mode == _RefreshIndicatorMode.armed);
     if (details == null) return;
-    double newValue = _dragOffset! /
-        (details.globalPosition.dy * _kDragContainerExtentPercentage);
-    if (_mode == _RefreshIndicatorMode.armed)
-      newValue = math.max(newValue, 1.0 / _kDragSizeFactorLimit);
+    double newValue = _dragOffset! / (details.globalPosition.dy * _kDragContainerExtentPercentage);
+    if (_mode == _RefreshIndicatorMode.armed) newValue = math.max(newValue, 1.0 / _kDragSizeFactorLimit);
     _positionController.value = newValue.clamp(0.0, 1.0);
 
     if (_mode == _RefreshIndicatorMode.armed) {
-      final dynamicPos =
-          ((details.globalPosition.dx * _widgetScale) / indicatorWidth)
-              .clamp(0.0, 1.0);
+      final dynamicPos = ((details.globalPosition.dx * _widgetScale) / indicatorWidth).clamp(0.0, 1.0);
       final nextPositionIndex = _clampIndex(dynamicPos);
       if (nextPositionIndex != _circlePreviousPositionIndex) {
         _circlePreviousPositionIndex = nextPositionIndex;
@@ -376,28 +359,25 @@ class MultiPullState extends State<MultiPull>
       }
     }
 
-    if (_mode == _RefreshIndicatorMode.drag && _valueColor.value.alpha == 0xFF)
+    if (_mode == _RefreshIndicatorMode.drag && _valueColor.value!.alpha == 0xFF) {
       _mode = _RefreshIndicatorMode.armed;
+    }
   }
 
   // Stop showing the refresh indicator.
   Future<void> _dismiss(_RefreshIndicatorMode newMode) async {
     await Future<void>.value();
-    assert(newMode == _RefreshIndicatorMode.canceled ||
-        newMode == _RefreshIndicatorMode.done);
+    assert(newMode == _RefreshIndicatorMode.canceled || newMode == _RefreshIndicatorMode.done);
     setState(() {
       _mode = newMode;
     });
     switch (_mode) {
       case _RefreshIndicatorMode.done:
-        await _scaleController.animateTo(1.0,
-            duration: _kIndicatorScaleDuration);
+        await _scaleController.animateTo(1.0, duration: _kIndicatorScaleDuration);
         break;
       case _RefreshIndicatorMode.canceled:
-        await _positionController.animateTo(0.0,
-            duration: _kIndicatorScaleDuration);
-        await _horizonPositionController.animateTo(0.0,
-            duration: _kIndicatorScaleDuration);
+        await _positionController.animateTo(0.0, duration: _kIndicatorScaleDuration);
+        await _horizonPositionController.animateTo(0.0, duration: _kIndicatorScaleDuration);
         break;
       default:
         assert(false);
@@ -437,13 +417,10 @@ class MultiPullState extends State<MultiPull>
           _mode = _RefreshIndicatorMode.refresh;
         });
       }
-      final bool showIndeterminateIndicator =
-          _mode == _RefreshIndicatorMode.refresh ||
-              _mode == _RefreshIndicatorMode.done;
+      final bool showIndeterminateIndicator = _mode == _RefreshIndicatorMode.refresh || _mode == _RefreshIndicatorMode.done;
       setState(() {
         _indicator = RefreshProgressIndicator(
-          semanticsLabel: widget.semanticsLabel ??
-              MaterialLocalizations.of(context).refreshIndicatorSemanticLabel,
+          semanticsLabel: widget.semanticsLabel ?? MaterialLocalizations.of(context).refreshIndicatorSemanticLabel,
           semanticsValue: widget.semanticsValue,
           value: showIndeterminateIndicator ? null : _value.value,
           valueColor: _valueColor,
@@ -451,8 +428,7 @@ class MultiPullState extends State<MultiPull>
           strokeWidth: widget.strokeWidth,
         );
       });
-      final Future<void> refreshResult =
-          widget.actionWidgets[selectedIndex].onRefresh!();
+      final Future<void> refreshResult = widget.actionWidgets[selectedIndex].onRefresh!();
 
       refreshResult.whenComplete(() {
         if (mounted && _mode == _RefreshIndicatorMode.refresh) {
@@ -482,8 +458,7 @@ class MultiPullState extends State<MultiPull>
   /// actual scroll view. It defaults to showing the indicator at the top. To
   /// show it at the bottom, set `atTop` to false.
   Future<void> show({bool atTop = true}) {
-    if (_mode != _RefreshIndicatorMode.refresh &&
-        _mode != _RefreshIndicatorMode.snap) {
+    if (_mode != _RefreshIndicatorMode.refresh && _mode != _RefreshIndicatorMode.snap) {
       if (_mode == null) _start(atTop ? AxisDirection.down : AxisDirection.up);
       _show();
     }
@@ -527,12 +502,8 @@ class MultiPullState extends State<MultiPull>
               axisAlignment: _isIndicatorAtTop! ? 1.0 : -1.0,
               sizeFactor: _positionFactor, // this is what brings it down
               child: Container(
-                padding: _isIndicatorAtTop!
-                    ? EdgeInsets.only(top: widget.displacement)
-                    : EdgeInsets.only(bottom: widget.displacement),
-                alignment: _isIndicatorAtTop!
-                    ? Alignment.topCenter
-                    : Alignment.bottomCenter,
+                padding: _isIndicatorAtTop! ? EdgeInsets.only(top: widget.displacement) : EdgeInsets.only(bottom: widget.displacement),
+                alignment: _isIndicatorAtTop! ? Alignment.topCenter : Alignment.bottomCenter,
                 child: ScaleTransition(
                   scale: _scaleFactor,
                   child: AnimatedBuilder(
@@ -563,12 +534,8 @@ class MultiPullState extends State<MultiPull>
               axisAlignment: _isIndicatorAtTop! ? 1.0 : -1.0,
               sizeFactor: _positionFactor, // this is what brings it down
               child: Container(
-                padding: _isIndicatorAtTop!
-                    ? EdgeInsets.only(top: widget.displacement)
-                    : EdgeInsets.only(bottom: widget.displacement),
-                alignment: _isIndicatorAtTop!
-                    ? Alignment.topCenter
-                    : Alignment.bottomCenter,
+                padding: _isIndicatorAtTop! ? EdgeInsets.only(top: widget.displacement) : EdgeInsets.only(bottom: widget.displacement),
+                alignment: _isIndicatorAtTop! ? Alignment.topCenter : Alignment.bottomCenter,
                 child: ScaleTransition(
                   scale: _scaleFactor,
                   child: AnimatedBuilder(
@@ -576,10 +543,7 @@ class MultiPullState extends State<MultiPull>
                       builder: (context, child) {
                         return Transform.translate(
                           child: Opacity(
-                            opacity: _mode == _RefreshIndicatorMode.refresh ||
-                                    _mode == _RefreshIndicatorMode.done
-                                ? 0.0
-                                : widget.circleOpacity,
+                            opacity: _mode == _RefreshIndicatorMode.refresh || _mode == _RefreshIndicatorMode.done ? 0.0 : widget.circleOpacity,
                             child: Container(
                               width: _actionSize,
                               height: _actionSize,
@@ -590,9 +554,7 @@ class MultiPullState extends State<MultiPull>
                             ),
                           ),
                           offset: Offset(
-                            (_horizonPositionController.value *
-                                    indicatorWidth) -
-                                (indicatorWidth / 2),
+                            (_horizonPositionController.value * indicatorWidth) - (indicatorWidth / 2),
                             0,
                           ),
                         );
