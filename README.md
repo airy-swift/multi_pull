@@ -1,3 +1,7 @@
+
+![version:0.3.1](https://img.shields.io/badge/version-0.3.1-f53.svg)
+![license:BSD3](https://img.shields.io/badge/license-BSD3-0d0.svg)
+
 # multi_pull
 
 "multi pull" is an extension of RefreshIndicator!
