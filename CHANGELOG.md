@@ -1,3 +1,7 @@
+## [0.3.1] -
+
+- fix error: colortween is not subtype of type animated<color>
+
 ## [0.2.1] -
 
 - update document
