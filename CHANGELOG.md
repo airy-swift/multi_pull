@@ -1,3 +1,8 @@
+## [0.3.2] -
+
+- fix ActionWidget alignment when no label.
+- breaking change: change ActionWidget label type from String to Widget.
+
 ## [0.3.1] -
 
 - fix error: colortween is not subtype of type animated<color>

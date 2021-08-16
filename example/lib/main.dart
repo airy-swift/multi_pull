@@ -85,17 +85,17 @@ class NextPageState extends State<NextPage> {
         actionWidgets: [
           ActionWidget(
             icon: Icon(Icons.arrow_back_ios_outlined),
-            label: "back",
+            label: Text("back"),
             action: () => Navigator.pop(context),
           ),
           ActionWidget(
             icon: Icon(Icons.refresh_rounded),
-            label: "reload",
+            // label: Text("reload"),
             onRefresh: () async => await Future.delayed(Duration(seconds: 2)),
           ),
           ActionWidget(
             icon: Icon(Icons.backspace_outlined),
-            label: "clear",
+            label: Text("clear"),
             action: () {
               _firstTextController.clear();
               _secondTextController.clear();
