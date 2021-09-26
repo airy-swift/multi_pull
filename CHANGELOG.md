@@ -8,6 +8,10 @@
 - label property of PullIndicator(ActionWidget) change type from String? to Widget?.
 - there was some gap between user circle and pullIndicators. so fixed the misalignment.
 
+## [0.3.2] -
+
+- fix ActionWidget alignment when no label.
+- breaking change: change ActionWidget label type from String to Widget.
 
 ## [0.3.1] -
 
