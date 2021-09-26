@@ -1,8 +1,11 @@
 
-
 part of 'multi_pull.dart';
 
-/// TODO: write what is this
+/// Pull Indicator can alternate RefreshIndicator on MultiPull
+/// you can set this as one of List<PullIndicator> property 'pullIndicators' of MultiPull
+/// user pull down a ListView what MultiPull setted, its shown horizontal arranged Pull Indicators.
+/// and when continue scroll vertical and horizontal, choose "what i pull choose"
+/// then user took off from screen, MultiPull call the PullIndicator's onPull
 class PullIndicator extends StatelessWidget {
   const PullIndicator({
     required this.icon,

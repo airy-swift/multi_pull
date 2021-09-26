@@ -90,7 +90,6 @@ class NextPageState extends State<NextPage> {
           ),
           PullIndicator(
             icon: Icon(Icons.refresh_rounded),
-            label: "reload",
             onPull: () async => await Future.delayed(Duration(seconds: 2)),
           ),
           PullIndicator(
@@ -104,7 +103,7 @@ class NextPageState extends State<NextPage> {
           ),
         ],
         child: ListView(
-          physics: BouncingScrollPhysics(),
+          physics: AlwaysScrollableScrollPhysics(),
           children: [
             TextField(
               controller: _firstTextController,
@@ -115,7 +114,6 @@ class NextPageState extends State<NextPage> {
             TextField(
               controller: _thirdTextController,
             ),
-            ...List.generate(100, (index) => Text(index.toString(), style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold))),
           ],
         ),
       ),

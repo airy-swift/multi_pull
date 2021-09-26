@@ -334,7 +334,7 @@ class MultiPullState extends State<MultiPull> with TickerProviderStateMixin<Mult
 
     _horizonPositionController.value = 0.5;
 
-    indicatorWidth = _key.currentContext!.size!.width - _actionSize / 2;
+    indicatorWidth = _key.currentContext!.size!.width + _actionSize / 2;
     final spaceWidth = 1 / (widget.pullIndicators.length + 1);
     clampList = List.generate(widget.pullIndicators.length, (i) => (i + 1) * spaceWidth);
     return true;
@@ -348,7 +348,7 @@ class MultiPullState extends State<MultiPull> with TickerProviderStateMixin<Mult
     _positionController.value = newValue.clamp(0.0, 1.0);
 
     if (_mode == _RefreshIndicatorMode.armed) {
-      final dynamicPos = ((details.globalPosition.dx * _widgetScale) / indicatorWidth).clamp(0.0, 1.0);
+      final dynamicPos = (details.globalPosition.dx / indicatorWidth).clamp(0.0, 1.0);
       final nextPositionIndex = _clampIndex(dynamicPos);
       if (nextPositionIndex != _circlePreviousPositionIndex) {
         _circlePreviousPositionIndex = nextPositionIndex;
@@ -499,7 +499,7 @@ class MultiPullState extends State<MultiPull> with TickerProviderStateMixin<Mult
       children: <Widget>[
         child,
 
-        /// action
+        /// pull indicator
         if (_mode != null)
           Positioned(
             top: _isIndicatorAtTop! ? 0.0 : null,
@@ -518,7 +518,7 @@ class MultiPullState extends State<MultiPull> with TickerProviderStateMixin<Mult
                     animation: _positionController,
                     builder: (BuildContext context, Widget? child) {
                       return FractionallySizedBox(
-                        widthFactor: _widgetScale,
+                        // widthFactor: _widgetScale,
                         child: AnimatedSwitcher(
                           duration: Duration(milliseconds: 500),
                           child: _indicator,
