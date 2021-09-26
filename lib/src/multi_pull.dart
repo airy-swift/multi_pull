@@ -13,8 +13,6 @@ const double _kDragContainerExtentPercentage = 0.25;
 // displacement; max displacement = _kDragSizeFactorLimit * displacement.
 const double _kDragSizeFactorLimit = 1.5;
 
-const double _widgetScale = 0.8;
-
 const double _actionSize = 70;
 
 // When the scroll ends, the duration of the refresh indicator's animation

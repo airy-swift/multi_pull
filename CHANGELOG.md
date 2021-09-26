@@ -1,3 +1,14 @@
+## [1.0.0]
+
+**breaking changes**
+- rename ActionWidget to PullIndicator
+  - then rename MultiPull property 'actionWidgets' to 'pullIndicators' too.
+- abolish PullIndicator(ActionWidget)'s property: action and onRefresh.
+  - then added new property onPull on MultiPull.
+- label property of PullIndicator(ActionWidget) change type from String? to Widget?.
+- there was some gap between user circle and pullIndicators. so fixed the misalignment.
+
+
 ## [0.3.1] -
 
 - fix error: colortween is not subtype of type animated<color>

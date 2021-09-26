@@ -15,12 +15,14 @@ class PullIndicator extends StatelessWidget {
   });
 
   final Widget icon;
-  final String? label;
+  final Widget? label;
   final FutureOr<void> Function() onPull;
   final MainAxisAlignment mainAxisAlignment;
 
   @override
   Widget build(BuildContext context) {
+    final _label = label;
+
     return Column(
       mainAxisAlignment: mainAxisAlignment,
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -30,8 +32,8 @@ class PullIndicator extends StatelessWidget {
           height: _actionSize - 30,
           child: icon,
         ),
-        if (label != null) //
-          Text(label!),
+        if (_label != null) //
+          _label,
       ],
     );
   }

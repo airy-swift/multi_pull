@@ -1,8 +1,8 @@
 name: multi_pull
-description: A new Flutter package project.
-version: 0.3.1
+description: MultiPull.
+version: 1.0.0
 author: airy-swift
-homepage: https://github.com/airy-swift/multi_pull
+homepage: https://airy-56405.web.app/
 
 environment:
   sdk: ">=2.12.1 <3.0.0"

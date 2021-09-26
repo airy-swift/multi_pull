@@ -85,7 +85,7 @@ class NextPageState extends State<NextPage> {
         pullIndicators: [
           PullIndicator(
             icon: Icon(Icons.arrow_back_ios_outlined),
-            label: "back",
+            label: Text("back"),
             onPull: () => Navigator.pop(context),
           ),
           PullIndicator(
@@ -94,7 +94,7 @@ class NextPageState extends State<NextPage> {
           ),
           PullIndicator(
             icon: Icon(Icons.backspace_outlined),
-            label: "clear",
+            label: Text("clear", style: TextStyle(color: Colors.redAccent)),
             onPull: () {
               _firstTextController.clear();
               _secondTextController.clear();
