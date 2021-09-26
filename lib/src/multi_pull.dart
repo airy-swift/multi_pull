@@ -3,6 +3,8 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+part 'pull_indicator.dart';
+
 // The over-scroll distance that moves the indicator to its maximum
 // displacement, as a percentage of the scrollable's container extent.
 const double _kDragContainerExtentPercentage = 0.25;
@@ -94,7 +96,7 @@ class MultiPull extends StatefulWidget {
       {Key? key,
       required this.child,
       this.displacement = 40.0,
-      required this.actionWidgets,
+      required this.pullIndicators,
       this.circleOpacity = 0.3,
       this.circleColor = Colors.grey,
       this.circleMoveDuration,
@@ -120,7 +122,7 @@ class MultiPull extends StatefulWidget {
   /// its actual displacement may significantly exceed this value.
   final double displacement;
 
-  final List<ActionWidget> actionWidgets;
+  final List<PullIndicator> pullIndicators;
 
   final double circleOpacity;
 
@@ -239,7 +241,7 @@ class MultiPullState extends State<MultiPull> with TickerProviderStateMixin<Mult
           height: _actionSize,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: widget.actionWidgets,
+            children: widget.pullIndicators,
           ),
         );
       });
@@ -333,8 +335,8 @@ class MultiPullState extends State<MultiPull> with TickerProviderStateMixin<Mult
     _horizonPositionController.value = 0.5;
 
     indicatorWidth = _key.currentContext!.size!.width - _actionSize / 2;
-    final spaceWidth = 1 / (widget.actionWidgets.length + 1);
-    clampList = List.generate(widget.actionWidgets.length, (i) => (i + 1) * spaceWidth);
+    final spaceWidth = 1 / (widget.pullIndicators.length + 1);
+    clampList = List.generate(widget.pullIndicators.length, (i) => (i + 1) * spaceWidth);
     return true;
   }
 
@@ -406,12 +408,12 @@ class MultiPullState extends State<MultiPull> with TickerProviderStateMixin<Mult
 
     final selectedIndex = _clampIndex(_horizonPositionController.value);
 
-    if (widget.actionWidgets[selectedIndex].action != null) {
-      widget.actionWidgets[selectedIndex].action!();
+    if (widget.pullIndicators[selectedIndex].action != null) {
+      widget.pullIndicators[selectedIndex].action!();
 
       completer.complete();
       _dismiss(_RefreshIndicatorMode.done);
-    } else if (widget.actionWidgets[selectedIndex].onRefresh != null) {
+    } else if (widget.pullIndicators[selectedIndex].onRefresh != null) {
       if (mounted && _mode == _RefreshIndicatorMode.snap) {
         setState(() {
           _mode = _RefreshIndicatorMode.refresh;
@@ -428,7 +430,7 @@ class MultiPullState extends State<MultiPull> with TickerProviderStateMixin<Mult
           strokeWidth: widget.strokeWidth,
         );
       });
-      final Future<void> refreshResult = widget.actionWidgets[selectedIndex].onRefresh!();
+      final Future<void> refreshResult = widget.pullIndicators[selectedIndex].onRefresh!();
 
       refreshResult.whenComplete(() {
         if (mounted && _mode == _RefreshIndicatorMode.refresh) {
@@ -568,32 +570,3 @@ class MultiPullState extends State<MultiPull> with TickerProviderStateMixin<Mult
   }
 }
 
-/// TODO: write what is this
-class ActionWidget extends StatelessWidget {
-  const ActionWidget({
-    required this.icon,
-    this.label,
-    this.action,
-    this.onRefresh,
-  }) : assert((action != null) != (onRefresh != null));
-
-  final Widget icon;
-  final String? label;
-  final Function? action;
-  final RefreshCallback? onRefresh;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Container(
-          width: _actionSize - 30,
-          height: _actionSize - 30,
-          child: icon,
-        ),
-        if (label != null) //
-          Text(label!),
-      ],
-    );
-  }
-}

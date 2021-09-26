@@ -6,7 +6,7 @@ homepage: https://github.com/airy-swift/multi_pull
 
 environment:
   sdk: ">=2.12.1 <3.0.0"
-  flutter: ">=2.0.0"
+  flutter: ">=2.0.6"
 
 dependencies:
   flutter:

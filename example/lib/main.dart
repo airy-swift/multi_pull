@@ -21,7 +21,7 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
+  MyHomePage({Key? key, required this.title}) : super(key: key);
   final String title;
 
   @override
@@ -52,7 +52,7 @@ class _MyHomePageState extends State<MyHomePage> {
 }
 
 class NextPage extends StatefulWidget {
-  NextPage({Key key}) : super(key: key);
+  NextPage({Key? key}) : super(key: key);
 
   @override
   NextPageState createState() => NextPageState();
@@ -82,18 +82,18 @@ class NextPageState extends State<NextPage> {
       body: MultiPull(
         circleMoveDuration: Duration(milliseconds: 400),
         circleMoveCurve: Curves.easeInOut,
-        actionWidgets: [
-          ActionWidget(
+        pullIndicators: [
+          PullIndicator(
             icon: Icon(Icons.arrow_back_ios_outlined),
             label: "back",
             action: () => Navigator.pop(context),
           ),
-          ActionWidget(
+          PullIndicator(
             icon: Icon(Icons.refresh_rounded),
             label: "reload",
             onRefresh: () async => await Future.delayed(Duration(seconds: 2)),
           ),
-          ActionWidget(
+          PullIndicator(
             icon: Icon(Icons.backspace_outlined),
             label: "clear",
             action: () {
