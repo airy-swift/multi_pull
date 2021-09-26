@@ -3,6 +3,8 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+part 'pull_indicator.dart';
+
 // The over-scroll distance that moves the indicator to its maximum
 // displacement, as a percentage of the scrollable's container extent.
 const double _kDragContainerExtentPercentage = 0.25;
@@ -10,8 +12,6 @@ const double _kDragContainerExtentPercentage = 0.25;
 // How much the scroll's drag gesture can overshoot the RefreshIndicator's
 // displacement; max displacement = _kDragSizeFactorLimit * displacement.
 const double _kDragSizeFactorLimit = 1.5;
-
-const double _widgetScale = 0.8;
 
 const double _actionSize = 70;
 
@@ -94,7 +94,7 @@ class MultiPull extends StatefulWidget {
       {Key? key,
       required this.child,
       this.displacement = 40.0,
-      required this.actionWidgets,
+      required this.pullIndicators,
       this.circleOpacity = 0.3,
       this.circleColor = Colors.grey,
       this.circleMoveDuration,
@@ -120,7 +120,7 @@ class MultiPull extends StatefulWidget {
   /// its actual displacement may significantly exceed this value.
   final double displacement;
 
-  final List<ActionWidget> actionWidgets;
+  final List<PullIndicator> pullIndicators;
 
   final double circleOpacity;
 
@@ -246,7 +246,7 @@ class MultiPullState extends State<MultiPull>
           height: _actionSize,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: widget.actionWidgets,
+            children: widget.pullIndicators,
           ),
         );
       });
@@ -344,10 +344,9 @@ class MultiPullState extends State<MultiPull>
 
     _horizonPositionController.value = 0.5;
 
-    indicatorWidth = _key.currentContext!.size!.width - _actionSize / 2;
-    final spaceWidth = 1 / (widget.actionWidgets.length + 1);
-    clampList =
-        List.generate(widget.actionWidgets.length, (i) => (i + 1) * spaceWidth);
+    indicatorWidth = _key.currentContext!.size!.width + _actionSize / 2;
+    final spaceWidth = 1 / (widget.pullIndicators.length + 1);
+    clampList = List.generate(widget.pullIndicators.length, (i) => (i + 1) * spaceWidth);
     return true;
   }
 
@@ -362,9 +361,7 @@ class MultiPullState extends State<MultiPull>
     _positionController.value = newValue.clamp(0.0, 1.0);
 
     if (_mode == _RefreshIndicatorMode.armed) {
-      final dynamicPos =
-          ((details.globalPosition.dx * _widgetScale) / indicatorWidth)
-              .clamp(0.0, 1.0);
+      final dynamicPos = (details.globalPosition.dx / indicatorWidth).clamp(0.0, 1.0);
       final nextPositionIndex = _clampIndex(dynamicPos);
       if (nextPositionIndex != _circlePreviousPositionIndex) {
         _circlePreviousPositionIndex = nextPositionIndex;
@@ -429,12 +426,11 @@ class MultiPullState extends State<MultiPull>
 
     final selectedIndex = _clampIndex(_horizonPositionController.value);
 
-    if (widget.actionWidgets[selectedIndex].action != null) {
-      widget.actionWidgets[selectedIndex].action!();
+    try {
+      /// switch process(will show RefreshIndicator) if onPull will be able to cast
+      final syncPull = widget.pullIndicators[selectedIndex].onPull as Future<void> Function();
 
-      completer.complete();
-      _dismiss(_RefreshIndicatorMode.done);
-    } else if (widget.actionWidgets[selectedIndex].onRefresh != null) {
+      /// when onPull is [void Function]
       if (mounted && _mode == _RefreshIndicatorMode.snap) {
         setState(() {
           _mode = _RefreshIndicatorMode.refresh;
@@ -454,8 +450,7 @@ class MultiPullState extends State<MultiPull>
           strokeWidth: widget.strokeWidth,
         );
       });
-      final Future<void> refreshResult =
-          widget.actionWidgets[selectedIndex].onRefresh!();
+      final Future<void> refreshResult = syncPull();
 
       refreshResult.whenComplete(() {
         if (mounted && _mode == _RefreshIndicatorMode.refresh) {
@@ -463,9 +458,16 @@ class MultiPullState extends State<MultiPull>
           _dismiss(_RefreshIndicatorMode.done);
         }
       });
-    } else {
-      assert(false);
+      return;
+    } catch (e, _) {
+      /// the onPull is not Future<void> Function
     }
+
+    /// when onPull is [void Function]
+    widget.pullIndicators[selectedIndex].onPull();
+
+    completer.complete();
+    _dismiss(_RefreshIndicatorMode.done);
   }
 
   /// Show the refresh indicator and run the refresh callback as if it had
@@ -519,7 +521,7 @@ class MultiPullState extends State<MultiPull>
       children: <Widget>[
         child,
 
-        /// action
+        /// pull indicator
         if (_mode != null)
           Positioned(
             top: _isIndicatorAtTop! ? 0.0 : null,
@@ -542,7 +544,7 @@ class MultiPullState extends State<MultiPull>
                     animation: _positionController,
                     builder: (BuildContext context, Widget? child) {
                       return FractionallySizedBox(
-                        widthFactor: _widgetScale,
+                        // widthFactor: _widgetScale,
                         child: AnimatedSwitcher(
                           duration: Duration(milliseconds: 500),
                           child: _indicator,
@@ -604,38 +606,6 @@ class MultiPullState extends State<MultiPull>
               ),
             ),
           ),
-      ],
-    );
-  }
-}
-
-/// TODO: write what is this
-class ActionWidget extends StatelessWidget {
-  const ActionWidget({
-    required this.icon,
-    this.label,
-    this.action,
-    this.onRefresh,
-  }) : assert((action != null) != (onRefresh != null));
-
-  final Widget icon;
-  final Widget? label;
-  final Function? action;
-  final RefreshCallback? onRefresh;
-
-  @override
-  Widget build(BuildContext context) {
-    final _label = label;
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Container(
-          width: _actionSize - 30,
-          height: _actionSize - 30,
-          child: icon,
-        ),
-        if (_label != null) //
-          _label,
       ],
     );
   }
