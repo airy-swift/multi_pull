@@ -1,5 +1,5 @@
 
-![version:0.3.1](https://img.shields.io/badge/version-0.3.1-f53.svg)
+![version:1.0.0](https://img.shields.io/badge/version-0.3.1-f53.svg)
 ![license:BSD3](https://img.shields.io/badge/license-BSD3-0d0.svg)
 
 # multi_pull
@@ -24,7 +24,7 @@ So long story short, let's see it in action!
 
 ```pubspec.yml
 dependencies:
-  multi_pull: [latest_version]
+  multi_pull: 1.0.0
 ```
 
 ## Getting Started
@@ -49,18 +49,18 @@ Scaffold(
         actionWidgets: [
           ActionWidget(
             icon: Icon(Icons.arrow_back_ios_outlined),
-            label: "back",
-            action: () => Navigator.pop(context),
+            label: Text("back"),
+            onPull: () => Navigator.pop(context),
           ),
           ActionWidget(
             icon: Icon(Icons.refresh_rounded),
-            label: "reload",
-            onRefresh: () async => await Future.delayed(Duration(seconds: 2)),
+            label: Text("reload"),
+            onPull: () async => await Future.delayed(Duration(seconds: 2)),
           ),
           ActionWidget(
             icon: Icon(Icons.backspace_outlined),
-            label: "clear",
-            action: () {
+            label: Text("clear"),
+            onPull: () {
               _firstTextController.clear();
               _secondTextController.clear();
               _thirdTextController.clear();
@@ -68,7 +68,7 @@ Scaffold(
           ),
         ],
         child: ListView(
-          physics: BouncingScrollPhysics(),
+          physics: AlwaysScrollableScrollPhysics(),
           children: [
             TextField(
               controller: _firstTextController,
@@ -79,7 +79,6 @@ Scaffold(
             TextField(
               controller: _thirdTextController,
             ),
-            ...List.generate(100, (index) => Text(index.toString(), style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold))),
           ],
         ),
       ),
