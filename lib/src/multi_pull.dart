@@ -408,12 +408,11 @@ class MultiPullState extends State<MultiPull> with TickerProviderStateMixin<Mult
 
     final selectedIndex = _clampIndex(_horizonPositionController.value);
 
-    if (widget.pullIndicators[selectedIndex].action != null) {
-      widget.pullIndicators[selectedIndex].action!();
+    try {
+      /// switch process(will show RefreshIndicator) if onPull will be able to cast
+      final syncPull = widget.pullIndicators[selectedIndex].onPull as Future<void> Function();
 
-      completer.complete();
-      _dismiss(_RefreshIndicatorMode.done);
-    } else if (widget.pullIndicators[selectedIndex].onRefresh != null) {
+      /// when onPull is [void Function]
       if (mounted && _mode == _RefreshIndicatorMode.snap) {
         setState(() {
           _mode = _RefreshIndicatorMode.refresh;
@@ -430,7 +429,7 @@ class MultiPullState extends State<MultiPull> with TickerProviderStateMixin<Mult
           strokeWidth: widget.strokeWidth,
         );
       });
-      final Future<void> refreshResult = widget.pullIndicators[selectedIndex].onRefresh!();
+      final Future<void> refreshResult = syncPull();
 
       refreshResult.whenComplete(() {
         if (mounted && _mode == _RefreshIndicatorMode.refresh) {
@@ -438,9 +437,16 @@ class MultiPullState extends State<MultiPull> with TickerProviderStateMixin<Mult
           _dismiss(_RefreshIndicatorMode.done);
         }
       });
-    } else {
-      assert(false);
+      return;
+    } catch (e, _) {
+      /// the onPull is not Future<void> Function
     }
+
+    /// when onPull is [void Function]
+    widget.pullIndicators[selectedIndex].onPull();
+
+    completer.complete();
+    _dismiss(_RefreshIndicatorMode.done);
   }
 
   /// Show the refresh indicator and run the refresh callback as if it had
@@ -569,4 +575,3 @@ class MultiPullState extends State<MultiPull> with TickerProviderStateMixin<Mult
     );
   }
 }
-

@@ -6,16 +6,14 @@ part of 'multi_pull.dart';
 class PullIndicator extends StatelessWidget {
   const PullIndicator({
     required this.icon,
+    required this.onPull,
     this.label,
-    this.action,
-    this.onRefresh,
     this.mainAxisAlignment = MainAxisAlignment.center,
-  }) : assert((action != null) != (onRefresh != null));
+  });
 
   final Widget icon;
   final String? label;
-  final Function? action;
-  final RefreshCallback? onRefresh;
+  final FutureOr<void> Function() onPull;
   final MainAxisAlignment mainAxisAlignment;
 
   @override

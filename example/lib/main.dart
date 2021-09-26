@@ -86,17 +86,17 @@ class NextPageState extends State<NextPage> {
           PullIndicator(
             icon: Icon(Icons.arrow_back_ios_outlined),
             label: "back",
-            action: () => Navigator.pop(context),
+            onPull: () => Navigator.pop(context),
           ),
           PullIndicator(
             icon: Icon(Icons.refresh_rounded),
             label: "reload",
-            onRefresh: () async => await Future.delayed(Duration(seconds: 2)),
+            onPull: () async => await Future.delayed(Duration(seconds: 2)),
           ),
           PullIndicator(
             icon: Icon(Icons.backspace_outlined),
             label: "clear",
-            action: () {
+            onPull: () {
               _firstTextController.clear();
               _secondTextController.clear();
               _thirdTextController.clear();
