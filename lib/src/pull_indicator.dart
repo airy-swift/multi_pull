@@ -6,8 +6,16 @@ part of 'multi_pull.dart';
 /// user pull down a ListView what MultiPull setted, its shown horizontal arranged Pull Indicators.
 /// and when continue scroll vertical and horizontal, choose "what i pull choose"
 /// then user took off from screen, MultiPull call the PullIndicator's onPull
-class PullIndicator extends StatelessWidget {
-  const PullIndicator({
+
+abstract class PullIndicator implements Widget {
+  PullIndicator(this.onPull);
+
+  final FutureOr<void> Function() onPull;
+}
+
+
+class DefaultPullIndicator extends StatelessWidget implements PullIndicator {
+  const DefaultPullIndicator({
     required this.icon,
     required this.onPull,
     this.label,

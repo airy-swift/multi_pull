@@ -83,16 +83,16 @@ class NextPageState extends State<NextPage> {
         circleMoveDuration: Duration(milliseconds: 400),
         circleMoveCurve: Curves.easeInOut,
         pullIndicators: [
-          PullIndicator(
+          DefaultPullIndicator(
             icon: Icon(Icons.arrow_back_ios_outlined),
             label: Text("back"),
             onPull: () => Navigator.pop(context),
           ),
-          PullIndicator(
+          DefaultPullIndicator(
             icon: Icon(Icons.refresh_rounded),
             onPull: () async => await Future.delayed(Duration(seconds: 2)),
           ),
-          PullIndicator(
+          DefaultPullIndicator(
             icon: Icon(Icons.backspace_outlined),
             label: Text("clear", style: TextStyle(color: Colors.redAccent)),
             onPull: () {
