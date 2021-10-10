@@ -1,5 +1,5 @@
 
-![version:1.0.0](https://img.shields.io/badge/version-1.0.0-f53.svg)
+![version:1.1.0](https://img.shields.io/badge/version-1.1.0-f53.svg)
 ![license:BSD3](https://img.shields.io/badge/license-BSD3-0d0.svg)
 
 # multi_pull
@@ -13,6 +13,11 @@ I'd love it if you gave me a star!🌟
 <img width=250 src="https://user-images.githubusercontent.com/61507019/119260538-32a26680-bc0e-11eb-94ac-7c341a00aa79.gif">
 
 
+### one of example customized multi_pull
+
+<img width=250 src="https://user-images.githubusercontent.com/61507019/136678547-27f96ef3-c3b3-4872-90f9-a3a693b72701.png">
+
+
 ## What is MultiPull?
 
 The RefreshIndicator is mainly used for scrolling and reloading, while MultiPull is an extension of the RefreshIndicator that allows users to select an action based on the widget that appears when they scroll. I have placed actions in the appBar, but I want users to be able to access them more easily. If you have an action in the appBar, but want to make it easier to access, you can place the same action in the MultiPull, and users will be able to reach it by just scrolling!
@@ -24,7 +29,7 @@ So long story short, let's see it in action!
 
 ```pubspec.yml
 dependencies:
-  multi_pull: 1.0.0
+  multi_pull: 1.1.0
 ```
 
 ## Getting Started
@@ -36,30 +41,30 @@ import 'package:multi_pull/multi_pull.dart';
 
 ~~~~
 ~~~~
-
-Scaffold(
+    Scaffold(
       appBar: AppBar(
         title: Text("Second Page"),
       ),
       body: MultiPull(
-        circleOpacity: 0.2,
-        circleColor: Colors.black,
         circleMoveDuration: Duration(milliseconds: 400),
         circleMoveCurve: Curves.easeInOut,
-        actionWidgets: [
-          ActionWidget(
+        circleIndicator: DefaultCircle(
+          circleColor: Colors.grey,
+          circleOpacity: 0.2,
+        ),
+        pullIndicators: [
+          DefaultPullIndicator(
             icon: Icon(Icons.arrow_back_ios_outlined),
             label: Text("back"),
             onPull: () => Navigator.pop(context),
           ),
-          ActionWidget(
+          DefaultPullIndicator(
             icon: Icon(Icons.refresh_rounded),
-            label: Text("reload"),
             onPull: () async => await Future.delayed(Duration(seconds: 2)),
           ),
-          ActionWidget(
+          DefaultPullIndicator(
             icon: Icon(Icons.backspace_outlined),
-            label: Text("clear"),
+            label: Text("clear", style: TextStyle(color: Colors.redAccent)),
             onPull: () {
               _firstTextController.clear();
               _secondTextController.clear();

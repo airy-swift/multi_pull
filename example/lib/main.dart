@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:multi_pull/multi_pull.dart';
 
@@ -36,30 +38,42 @@ class _MyHomePageState extends State<MyHomePage> {
         title: Text(widget.title),
       ),
       body: Center(
-        child: ElevatedButton(
-          child: Text('next page'),
-          onPressed: () {
-            Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => NextPage(),
-                ));
-          },
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            ElevatedButton(
+              child: Text('simple pull page'),
+              onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => SimplePage(),
+                  )),
+            ),
+            ElevatedButton(
+              child: Text('label pull page'),
+              onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => LabelPage(),
+                  )),
+            ),
+          ],
         ),
       ),
     );
   }
 }
 
-class NextPage extends StatefulWidget {
-  NextPage({Key? key}) : super(key: key);
+class SimplePage extends StatefulWidget {
+  SimplePage({Key? key}) : super(key: key);
 
   @override
-  NextPageState createState() => NextPageState();
+  SimplePageState createState() => SimplePageState();
 }
 
-class NextPageState extends State<NextPage> {
-  NextPageState();
+class SimplePageState extends State<SimplePage> {
+  SimplePageState();
 
   final _firstTextController = TextEditingController();
   final _secondTextController = TextEditingController();
@@ -82,17 +96,21 @@ class NextPageState extends State<NextPage> {
       body: MultiPull(
         circleMoveDuration: Duration(milliseconds: 400),
         circleMoveCurve: Curves.easeInOut,
+        circleIndicator: DefaultCircle(
+          circleColor: Colors.grey,
+          circleOpacity: 0.2,
+        ),
         pullIndicators: [
-          PullIndicator(
+          DefaultPullIndicator(
             icon: Icon(Icons.arrow_back_ios_outlined),
             label: Text("back"),
             onPull: () => Navigator.pop(context),
           ),
-          PullIndicator(
+          DefaultPullIndicator(
             icon: Icon(Icons.refresh_rounded),
             onPull: () async => await Future.delayed(Duration(seconds: 2)),
           ),
-          PullIndicator(
+          DefaultPullIndicator(
             icon: Icon(Icons.backspace_outlined),
             label: Text("clear", style: TextStyle(color: Colors.redAccent)),
             onPull: () {
@@ -114,6 +132,39 @@ class NextPageState extends State<NextPage> {
             TextField(
               controller: _thirdTextController,
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class LabelPage extends StatelessWidget {
+  const LabelPage();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(),
+      body: MultiPull(
+        circleMoveDuration: Duration(milliseconds: 400),
+        circleMoveCurve: Curves.easeInOut,
+        circleIndicator: ArrowIndicator(),
+        pullIndicators: [
+          LabelPullIndicator(
+            label: "Back",
+            onPull: () => Navigator.pop(context),
+          ),
+          LabelPullIndicator(
+            label: "Refresh",
+            onPull: () async => await Future.delayed(Duration(seconds: 2)),
+          ),
+
+        ],
+        child: ListView(
+          physics: AlwaysScrollableScrollPhysics(),
+          children: [
+            Center(child: Text("")),
           ],
         ),
       ),
