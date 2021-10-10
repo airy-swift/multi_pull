@@ -96,6 +96,10 @@ class SimplePageState extends State<SimplePage> {
       body: MultiPull(
         circleMoveDuration: Duration(milliseconds: 400),
         circleMoveCurve: Curves.easeInOut,
+        circleIndicator: DefaultCircle(
+          circleColor: Colors.grey,
+          circleOpacity: 0.2,
+        ),
         pullIndicators: [
           DefaultPullIndicator(
             icon: Icon(Icons.arrow_back_ios_outlined),
@@ -160,7 +164,7 @@ class LabelPage extends StatelessWidget {
         child: ListView(
           physics: AlwaysScrollableScrollPhysics(),
           children: [
-            Center(child: Text("label")),
+            Center(child: Text("")),
           ],
         ),
       ),

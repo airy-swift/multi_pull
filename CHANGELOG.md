@@ -1,4 +1,12 @@
-## [1.0.0]
+## [1.1.0]
+
+- enable customize PullIndicator and CircleIndicator.
+
+**breaking change**
+- rename refresh indicator colors property.
+
+
+## [1.0.0+1]
 
 **breaking changes**
 - rename ActionWidget to PullIndicator
